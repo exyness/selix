@@ -38,7 +38,7 @@ pub struct ExecuteSwap<'info> {
         seeds = [PLATFORM_SEED, platform.authority.as_ref()],
         bump = platform.bump,
     )]
-    pub platform: Account<'info, Platform>,
+    pub platform: Box<Account<'info, Platform>>,
 
     /// CHECK: Fee collector wallet. Validated against platform state.
     #[account(
@@ -53,7 +53,7 @@ pub struct ExecuteSwap<'info> {
         bump = listing.bump,
         has_one = maker,
     )]
-    pub listing: Account<'info, Listing>,
+    pub listing: Box<Account<'info, Listing>>,
 
     #[account(
         mut,
@@ -61,9 +61,8 @@ pub struct ExecuteSwap<'info> {
         associated_token::authority = listing,
         associated_token::token_program = token_program,
     )]
-    pub vault: InterfaceAccount<'info, TokenAccount>,
+    pub vault: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    // Taker receives source tokens from vault
     #[account(
         init_if_needed,
         payer = taker,
@@ -71,27 +70,24 @@ pub struct ExecuteSwap<'info> {
         associated_token::authority = taker,
         associated_token::token_program = token_program,
     )]
-    pub taker_token_account_source: InterfaceAccount<'info, TokenAccount>,
+    pub taker_token_account_source: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    // Taker sends destination tokens
     #[account(
         mut,
         associated_token::mint = token_mint_destination,
         associated_token::authority = taker,
         associated_token::token_program = token_program,
     )]
-    pub taker_token_account_destination: InterfaceAccount<'info, TokenAccount>,
+    pub taker_token_account_destination: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    // Maker receives destination tokens — validated as maker's ATA
     #[account(
         mut,
         associated_token::mint = token_mint_destination,
         associated_token::authority = maker,
         associated_token::token_program = token_program,
     )]
-    pub maker_token_account_destination: InterfaceAccount<'info, TokenAccount>,
+    pub maker_token_account_destination: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    // Fee collector receives fee portion — authority is the real account above
     #[account(
         init_if_needed,
         payer = taker,
@@ -99,22 +95,21 @@ pub struct ExecuteSwap<'info> {
         associated_token::authority = fee_collector,
         associated_token::token_program = token_program,
     )]
-    pub fee_collector_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub fee_collector_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    // Mints validated against listing
     #[account(
         mint::token_program = token_program,
         constraint = token_mint_source.key() == listing.token_mint_source
             @ SelixError::TokenAccountMintMismatch,
     )]
-    pub token_mint_source: InterfaceAccount<'info, Mint>,
+    pub token_mint_source: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
         mint::token_program = token_program,
         constraint = token_mint_destination.key() == listing.token_mint_destination
             @ SelixError::TokenAccountMintMismatch,
     )]
-    pub token_mint_destination: InterfaceAccount<'info, Mint>,
+    pub token_mint_destination: Box<InterfaceAccount<'info, Mint>>,
 
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -122,11 +117,10 @@ pub struct ExecuteSwap<'info> {
 }
 
 pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<()> {
-    let platform = &ctx.accounts.platform;
     let current_time = Clock::get()?.unix_timestamp;
 
     // Validate platform not paused
-    validate_not_paused(platform)?;
+    require!(!ctx.accounts.platform.is_paused, SelixError::PlatformPaused);
 
     // Snapshot listing data before mutable borrow
     let listing_id = ctx.accounts.listing.id;
@@ -136,6 +130,7 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
     let listing_amount_source_remaining = ctx.accounts.listing.amount_source_remaining;
     let listing_amount_destination_remaining = ctx.accounts.listing.amount_destination_remaining;
     let listing_min_fill_amount = ctx.accounts.listing.min_fill_amount;
+    let fee_basis_points = ctx.accounts.platform.fee_basis_points;
 
     // Validate listing is active
     require!(
@@ -177,23 +172,27 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
     );
 
     // Calculate fee
-    let fee_amount = calculate_fee(amount_destination, platform.fee_basis_points)?;
+    let fee_amount = calculate_fee(amount_destination, fee_basis_points)?;
     let amount_to_maker = amount_destination
         .checked_sub(fee_amount)
         .ok_or(SelixError::ArithmeticUnderflow)?;
 
     // Check taker has sufficient balance
-    check_sufficient_balance(&ctx.accounts.taker_token_account_destination, amount_destination)?;
+    require!(
+        ctx.accounts.taker_token_account_destination.amount >= amount_destination,
+        SelixError::InsufficientTakerBalance
+    );
 
     // Build listing PDA signer seeds
     let maker_key = ctx.accounts.maker.key();
-    let listing_seeds = &[
+    let id_bytes = listing_id.to_le_bytes();
+    let listing_seeds: &[&[u8]] = &[
         LISTING_SEED,
         maker_key.as_ref(),
-        &listing_id.to_le_bytes(),
+        &id_bytes,
         &[listing_bump],
     ];
-    let signer_seeds = &[&listing_seeds[..]];
+    let signer_seeds = &[listing_seeds];
 
     // Grab AccountInfo before mutable borrow of listing
     let listing_account_info = ctx.accounts.listing.to_account_info();
@@ -316,14 +315,7 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
         timestamp: current_time,
     });
 
-    msg!("=== SWAP EXECUTED ===");
-    msg!("Listing ID: {}", listing_id);
-    msg!("Maker: {}", ctx.accounts.maker.key());
-    msg!("Taker: {}", ctx.accounts.taker.key());
-    msg!("Source: {} | Dest: {}", amount_source, amount_destination);
-    msg!("Fee: {} | To Maker: {}", fee_amount, amount_to_maker);
-    msg!("Partial: {} | Remaining: {}", is_partial, listing.amount_source_remaining);
-    msg!("=====================");
+    msg!("SWAP: {} src={} dst={} fee={}", listing_id, amount_source, amount_destination, fee_amount);
 
     Ok(())
 }
