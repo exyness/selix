@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::errors::SelixError;
+use anchor_lang::prelude::*;
 
 /// Get current timestamp from Clock sysvar
 pub fn get_current_timestamp() -> Result<i64> {

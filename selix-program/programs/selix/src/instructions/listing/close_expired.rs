@@ -1,5 +1,3 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use crate::{
     constants::*,
     errors::SelixError,
@@ -7,6 +5,8 @@ use crate::{
     state::{Listing, Platform},
     utils::*,
 };
+use anchor_lang::prelude::*;
+use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
 #[derive(Accounts)]
 pub struct CloseExpiredListing<'info> {
@@ -60,7 +60,10 @@ pub fn handler(ctx: Context<CloseExpiredListing>) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp;
 
     // Validate listing is expired
-    require!(is_expired(listing.expires_at)?, SelixError::ListingNotExpired);
+    require!(
+        is_expired(listing.expires_at)?,
+        SelixError::ListingNotExpired
+    );
 
     let amount_to_return = ctx.accounts.vault.amount;
 
@@ -107,7 +110,8 @@ pub fn handler(ctx: Context<CloseExpiredListing>) -> Result<()> {
     });
 
     // Listing audit log
-    msg!("=== LISTING EXPIRED & CLOSED ===");
+    msg!("LISTING EXPIRED & CLOSED");
+    msg!("---------------------------");
     msg!("Listing ID: {}", listing.id);
     msg!("Maker: {}", ctx.accounts.maker.key());
     msg!("Closer: {}", ctx.accounts.closer.key());
@@ -116,7 +120,6 @@ pub fn handler(ctx: Context<CloseExpiredListing>) -> Result<()> {
     msg!("Source Token: {}", ctx.accounts.token_mint_source.key());
     msg!("Vault Closed: {}", ctx.accounts.vault.key());
     msg!("Timestamp: {}", current_time);
-    msg!("================================");
-    
+
     Ok(())
 }

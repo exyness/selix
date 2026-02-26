@@ -1,14 +1,14 @@
-use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_interface::{Mint, TokenAccount, TokenInterface},
-};
 use crate::{
     constants::*,
     errors::SelixError,
     events::SwapExecuted,
     state::{Listing, ListingStatus, Platform, UserProfile},
     utils::*,
+};
+use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_interface::{Mint, TokenAccount, TokenInterface},
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -186,12 +186,7 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
     // Build listing PDA signer seeds
     let maker_key = ctx.accounts.maker.key();
     let id_bytes = listing_id.to_le_bytes();
-    let listing_seeds: &[&[u8]] = &[
-        LISTING_SEED,
-        maker_key.as_ref(),
-        &id_bytes,
-        &[listing_bump],
-    ];
+    let listing_seeds: &[&[u8]] = &[LISTING_SEED, maker_key.as_ref(), &id_bytes, &[listing_bump]];
     let signer_seeds = &[listing_seeds];
 
     // Grab AccountInfo before mutable borrow of listing
@@ -234,13 +229,17 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
 
     // Update listing state
     let listing = &mut ctx.accounts.listing;
-    listing.amount_source_remaining = listing.amount_source_remaining
+    listing.amount_source_remaining = listing
+        .amount_source_remaining
         .checked_sub(amount_source)
         .ok_or(SelixError::ArithmeticUnderflow)?;
-    listing.amount_destination_remaining = listing.amount_destination_remaining
+    listing.amount_destination_remaining = listing
+        .amount_destination_remaining
         .checked_sub(amount_destination)
         .ok_or(SelixError::ArithmeticUnderflow)?;
-    listing.fill_count = listing.fill_count.checked_add(1)
+    listing.fill_count = listing
+        .fill_count
+        .checked_add(1)
         .ok_or(SelixError::ArithmeticOverflow)?;
     listing.updated_at = current_time;
 
@@ -253,23 +252,31 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
 
     // Update platform stats
     let platform = &mut ctx.accounts.platform;
-    platform.total_swaps_executed = platform.total_swaps_executed.checked_add(1)
+    platform.total_swaps_executed = platform
+        .total_swaps_executed
+        .checked_add(1)
         .ok_or(SelixError::ArithmeticOverflow)?;
-    platform.total_volume_traded = platform.total_volume_traded
+    platform.total_volume_traded = platform
+        .total_volume_traded
         .checked_add(amount_destination as u128)
         .ok_or(SelixError::ArithmeticOverflow)?;
-    platform.total_fees_collected = platform.total_fees_collected
+    platform.total_fees_collected = platform
+        .total_fees_collected
         .checked_add(fee_amount)
         .ok_or(SelixError::ArithmeticOverflow)?;
 
     // Update taker profile
     if let Some(taker_profile) = &mut ctx.accounts.taker_profile {
-        taker_profile.swaps_executed = taker_profile.swaps_executed.checked_add(1)
+        taker_profile.swaps_executed = taker_profile
+            .swaps_executed
+            .checked_add(1)
             .ok_or(SelixError::ArithmeticOverflow)?;
-        taker_profile.volume_as_taker = taker_profile.volume_as_taker
+        taker_profile.volume_as_taker = taker_profile
+            .volume_as_taker
             .checked_add(amount_destination as u128)
             .ok_or(SelixError::ArithmeticOverflow)?;
-        taker_profile.total_fees_paid = taker_profile.total_fees_paid
+        taker_profile.total_fees_paid = taker_profile
+            .total_fees_paid
             .checked_add(fee_amount)
             .ok_or(SelixError::ArithmeticOverflow)?;
         taker_profile.last_activity_at = current_time;
@@ -277,9 +284,12 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
 
     // Update maker profile
     if let Some(maker_profile) = &mut ctx.accounts.maker_profile {
-        maker_profile.swaps_received = maker_profile.swaps_received.checked_add(1)
+        maker_profile.swaps_received = maker_profile
+            .swaps_received
+            .checked_add(1)
             .ok_or(SelixError::ArithmeticOverflow)?;
-        maker_profile.volume_as_maker = maker_profile.volume_as_maker
+        maker_profile.volume_as_maker = maker_profile
+            .volume_as_maker
             .checked_add(amount_to_maker as u128)
             .ok_or(SelixError::ArithmeticOverflow)?;
         maker_profile.last_activity_at = current_time;
@@ -315,7 +325,13 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
         timestamp: current_time,
     });
 
-    msg!("SWAP: {} src={} dst={} fee={}", listing_id, amount_source, amount_destination, fee_amount);
+    msg!(
+        "SWAP: {} src={} dst={} fee={}",
+        listing_id,
+        amount_source,
+        amount_destination,
+        fee_amount
+    );
 
     Ok(())
 }

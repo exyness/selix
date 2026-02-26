@@ -1,4 +1,3 @@
-use anchor_lang::prelude::*;
 use crate::{
     constants::*,
     errors::SelixError,
@@ -6,6 +5,7 @@ use crate::{
     state::Platform,
     utils::{validate_duration_bounds, validate_fee_bps},
 };
+use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializePlatformParams {
@@ -40,16 +40,10 @@ pub fn handler(ctx: Context<InitializePlatform>, params: InitializePlatformParam
     // Validate parameters
     validate_fee_bps(params.fee_basis_points)?;
     validate_duration_bounds(params.min_listing_duration, params.max_listing_duration)?;
-    
-    require!(
-        params.min_trade_amount > 0,
-        SelixError::InvalidAmount
-    );
-    
-    require!(
-        params.max_listings_per_user > 0,
-        SelixError::InvalidAmount
-    );
+
+    require!(params.min_trade_amount > 0, SelixError::InvalidAmount);
+
+    require!(params.max_listings_per_user > 0, SelixError::InvalidAmount);
 
     let platform = &mut ctx.accounts.platform;
     let current_time = Clock::get()?.unix_timestamp;
@@ -79,7 +73,8 @@ pub fn handler(ctx: Context<InitializePlatform>, params: InitializePlatformParam
     });
 
     // Admin audit log
-    msg!("=== ADMIN ACTION: PLATFORM INITIALIZED ===");
+    msg!("ADMIN ACTION: PLATFORM INITIALIZED");
+    msg!("------------------------------------");
     msg!("Authority: {}", ctx.accounts.authority.key());
     msg!("Fee Collector: {}", ctx.accounts.fee_collector.key());
     msg!("Fee BPS: {}", params.fee_basis_points);
@@ -88,7 +83,6 @@ pub fn handler(ctx: Context<InitializePlatform>, params: InitializePlatformParam
     msg!("Min Trade Amount: {}", params.min_trade_amount);
     msg!("Max Listings Per User: {}", params.max_listings_per_user);
     msg!("Timestamp: {}", current_time);
-    msg!("==========================================");
-    
+
     Ok(())
 }

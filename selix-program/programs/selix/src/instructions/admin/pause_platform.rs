@@ -1,10 +1,10 @@
-use anchor_lang::prelude::*;
 use crate::{
     constants::*,
     errors::SelixError,
     events::{PlatformPaused, PlatformResumed},
     state::Platform,
 };
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct PausePlatform<'info> {
@@ -34,10 +34,10 @@ pub fn pause_handler(ctx: Context<PausePlatform>) -> Result<()> {
         timestamp: current_time,
     });
 
-    msg!("=== ADMIN ACTION: PLATFORM PAUSED ===");
+    msg!("ADMIN ACTION: PLATFORM PAUSED");
+    msg!("--------------------------------");
     msg!("Authority: {}", ctx.accounts.authority.key());
     msg!("Timestamp: {}", current_time);
-    msg!("======================================");
 
     Ok(())
 }
@@ -56,10 +56,10 @@ pub fn resume_handler(ctx: Context<PausePlatform>) -> Result<()> {
         timestamp: current_time,
     });
 
-    msg!("=== ADMIN ACTION: PLATFORM RESUMED ===");
+    msg!("ADMIN ACTION: PLATFORM RESUMED");
+    msg!("---------------------------------");
     msg!("Authority: {}", ctx.accounts.authority.key());
     msg!("Timestamp: {}", current_time);
-    msg!("=======================================");
 
     Ok(())
 }

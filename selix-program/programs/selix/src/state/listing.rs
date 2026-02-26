@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use super::enums::ListingStatus;
+use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
@@ -82,7 +82,9 @@ impl Listing {
 
     pub fn update_after_fill(&mut self, source_filled: u64, destination_filled: u64) {
         self.amount_source_remaining = self.amount_source_remaining.saturating_sub(source_filled);
-        self.amount_destination_remaining = self.amount_destination_remaining.saturating_sub(destination_filled);
+        self.amount_destination_remaining = self
+            .amount_destination_remaining
+            .saturating_sub(destination_filled);
         self.fill_count = self.fill_count.saturating_add(1);
 
         if self.amount_source_remaining == 0 {

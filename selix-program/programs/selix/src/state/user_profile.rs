@@ -5,46 +5,46 @@ use anchor_lang::prelude::*;
 pub struct UserProfile {
     /// User wallet address
     pub user: Pubkey,
-    
+
     /// Referrer (if any)
     pub referrer: Option<Pubkey>,
-    
+
     /// Total listings created
     pub listings_created: u64,
-    
+
     /// Total listings cancelled
     pub listings_cancelled: u64,
-    
+
     /// Total swaps executed (as taker)
     pub swaps_executed: u64,
-    
+
     /// Total swaps received (as maker)
     pub swaps_received: u64,
-    
+
     /// Current active listings count
     pub active_listings: u16,
-    
+
     /// Total volume as maker (in lamports)
     pub volume_as_maker: u128,
-    
+
     /// Total volume as taker (in lamports)
     pub volume_as_taker: u128,
-    
+
     /// Total fees paid
     pub total_fees_paid: u64,
-    
+
     /// Default listing duration (seconds)
     pub default_listing_duration: i64,
-    
+
     /// Default slippage tolerance (basis points)
     pub default_slippage_bps: u16,
-    
+
     /// Account creation timestamp
     pub created_at: i64,
-    
+
     /// Last activity timestamp
     pub last_activity_at: i64,
-    
+
     /// PDA bump
     pub bump: u8,
 }

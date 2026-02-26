@@ -1,11 +1,11 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token_interface::Mint;
 use crate::{
     constants::*,
     errors::SelixError,
     events::TokenWhitelistUpdated,
     state::{Platform, TokenWhitelist},
 };
+use anchor_lang::prelude::*;
+use anchor_spl::token_interface::Mint;
 
 #[derive(Accounts)]
 pub struct ManageWhitelist<'info> {
@@ -49,12 +49,15 @@ pub fn handler(ctx: Context<ManageWhitelist>, is_whitelisted: bool) -> Result<()
         timestamp: current_time,
     });
 
-    msg!("=== ADMIN ACTION: WHITELIST UPDATED ===");
+    msg!("ADMIN ACTION: WHITELIST UPDATED");
+    msg!("------------------------------------");
     msg!("Authority: {}", ctx.accounts.authority.key());
     msg!("Token Mint: {}", ctx.accounts.token_mint.key());
-    msg!("Action: {}", if is_whitelisted { "ADDED" } else { "REMOVED" });
+    msg!(
+        "Action: {}",
+        if is_whitelisted { "ADDED" } else { "REMOVED" }
+    );
     msg!("Timestamp: {}", current_time);
-    msg!("========================================");
 
     Ok(())
 }

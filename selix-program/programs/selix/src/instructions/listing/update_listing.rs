@@ -1,4 +1,3 @@
-use anchor_lang::prelude::*;
 use crate::{
     constants::*,
     errors::SelixError,
@@ -6,6 +5,7 @@ use crate::{
     state::{Listing, ListingStatus, Platform},
     utils::*,
 };
+use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct UpdateListingParams {
@@ -57,10 +57,10 @@ pub fn handler(ctx: Context<UpdateListing>, params: UpdateListingParams) -> Resu
     // Update destination amount if provided
     if let Some(new_dest) = params.new_amount_destination {
         validate_amount(new_dest, platform.min_trade_amount)?;
-        
+
         // Calculate proportional remaining based on filled amount
         let filled_ratio = (listing.amount_source_total - listing.amount_source_remaining) as u128;
-        
+
         if filled_ratio > 0 {
             // Adjust proportionally
             let new_dest_remaining = (new_dest as u128)
@@ -68,13 +68,13 @@ pub fn handler(ctx: Context<UpdateListing>, params: UpdateListingParams) -> Resu
                 .ok_or(SelixError::ArithmeticOverflow)?
                 .checked_div(listing.amount_source_total as u128)
                 .ok_or(SelixError::DivisionByZero)?;
-            
-            listing.amount_destination_remaining = u64::try_from(new_dest_remaining)
-                .map_err(|_| SelixError::ArithmeticOverflow)?;
+
+            listing.amount_destination_remaining =
+                u64::try_from(new_dest_remaining).map_err(|_| SelixError::ArithmeticOverflow)?;
         } else {
             listing.amount_destination_remaining = new_dest;
         }
-        
+
         listing.amount_destination_total = new_dest;
     }
 
@@ -92,17 +92,18 @@ pub fn handler(ctx: Context<UpdateListing>, params: UpdateListingParams) -> Resu
 
     // Extend duration if provided
     if let Some(extend_duration) = params.extend_duration_seconds {
-        let new_expiry = listing.expires_at
+        let new_expiry = listing
+            .expires_at
             .checked_add(extend_duration)
             .ok_or(SelixError::ArithmeticOverflow)?;
-        
+
         // Validate new expiry is reasonable
         let max_expiry = current_time
             .checked_add(platform.max_listing_duration)
             .ok_or(SelixError::ArithmeticOverflow)?;
-        
+
         require!(new_expiry <= max_expiry, SelixError::DurationTooLong);
-        
+
         listing.expires_at = new_expiry;
     }
 
@@ -117,12 +118,16 @@ pub fn handler(ctx: Context<UpdateListing>, params: UpdateListingParams) -> Resu
     });
 
     // Listing audit log
-    msg!("=== LISTING UPDATED ===");
+    msg!("LISTING UPDATED");
+    msg!("------------------");
     msg!("Listing ID: {}", listing.id);
     msg!("Maker: {}", ctx.accounts.maker.key());
     if params.new_amount_destination.is_some() {
         msg!("Old Destination Amount: {}", old_amount_destination);
-        msg!("New Destination Amount: {}", listing.amount_destination_remaining);
+        msg!(
+            "New Destination Amount: {}",
+            listing.amount_destination_remaining
+        );
     }
     if params.new_min_fill_amount.is_some() {
         msg!("New Min Fill: {}", listing.min_fill_amount);
@@ -134,7 +139,6 @@ pub fn handler(ctx: Context<UpdateListing>, params: UpdateListingParams) -> Resu
         msg!("New Expiry: {}", listing.expires_at);
     }
     msg!("Timestamp: {}", current_time);
-    msg!("=======================");
-    
+
     Ok(())
 }

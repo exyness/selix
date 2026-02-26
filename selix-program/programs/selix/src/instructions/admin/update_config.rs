@@ -1,4 +1,3 @@
-use anchor_lang::prelude::*;
 use crate::{
     constants::*,
     errors::SelixError,
@@ -6,6 +5,7 @@ use crate::{
     state::Platform,
     utils::{validate_duration_bounds, validate_fee_bps},
 };
+use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct UpdateConfigParams {
@@ -42,11 +42,15 @@ pub fn handler(ctx: Context<UpdateConfig>, params: UpdateConfigParams) -> Result
     }
 
     // Update durations if provided
-    let new_min = params.min_listing_duration.unwrap_or(platform.min_listing_duration);
-    let new_max = params.max_listing_duration.unwrap_or(platform.max_listing_duration);
-    
+    let new_min = params
+        .min_listing_duration
+        .unwrap_or(platform.min_listing_duration);
+    let new_max = params
+        .max_listing_duration
+        .unwrap_or(platform.max_listing_duration);
+
     validate_duration_bounds(new_min, new_max)?;
-    
+
     if params.min_listing_duration.is_some() {
         platform.min_listing_duration = new_min;
     }
@@ -82,7 +86,8 @@ pub fn handler(ctx: Context<UpdateConfig>, params: UpdateConfigParams) -> Result
     });
 
     // Admin audit log
-    msg!("=== ADMIN ACTION: CONFIG UPDATED ===");
+    msg!("ADMIN ACTION: CONFIG UPDATED");
+    msg!("------------------------------");
     msg!("Authority: {}", ctx.accounts.authority.key());
     if params.fee_basis_points.is_some() {
         msg!("New Fee BPS: {}", platform.fee_basis_points);
@@ -103,7 +108,6 @@ pub fn handler(ctx: Context<UpdateConfig>, params: UpdateConfigParams) -> Result
         msg!("Whitelist Enabled: {}", platform.whitelist_enabled);
     }
     msg!("Timestamp: {}", current_time);
-    msg!("====================================");
-    
+
     Ok(())
 }

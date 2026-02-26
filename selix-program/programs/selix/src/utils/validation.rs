@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::{constants::*, errors::SelixError, state::Platform};
+use anchor_lang::prelude::*;
 
 /// Validate amount is above minimum
 pub fn validate_amount(amount: u64, min_amount: u64) -> Result<()> {
@@ -29,10 +29,7 @@ pub fn validate_duration(duration: i64, platform: &Platform) -> Result<()> {
 
 /// Validate fee configuration
 pub fn validate_fee_bps(fee_bps: u16) -> Result<()> {
-    require!(
-        fee_bps <= MAX_FEE_BPS,
-        SelixError::InvalidFeeConfiguration
-    );
+    require!(fee_bps <= MAX_FEE_BPS, SelixError::InvalidFeeConfiguration);
     Ok(())
 }
 
@@ -47,10 +44,7 @@ pub fn validate_slippage_bps(slippage_bps: u16) -> Result<()> {
 
 /// Validate minimum fill amount is reasonable
 pub fn validate_min_fill_amount(min_fill: u64, total_amount: u64) -> Result<()> {
-    require!(
-        min_fill <= total_amount,
-        SelixError::MinFillAmountTooLarge
-    );
+    require!(min_fill <= total_amount, SelixError::MinFillAmountTooLarge);
     Ok(())
 }
 
@@ -62,19 +56,13 @@ pub fn validate_not_paused(platform: &Platform) -> Result<()> {
 
 /// Validate user hasn't exceeded listing limit
 pub fn validate_listing_limit(active_count: u16, max_allowed: u16) -> Result<()> {
-    require!(
-        active_count < max_allowed,
-        SelixError::MaxListingsReached
-    );
+    require!(active_count < max_allowed, SelixError::MaxListingsReached);
     Ok(())
 }
 
 /// Validate timestamp is in the future
 pub fn validate_future_timestamp(timestamp: i64, current_time: i64) -> Result<()> {
-    require!(
-        timestamp > current_time,
-        SelixError::ListingExpired
-    );
+    require!(timestamp > current_time, SelixError::ListingExpired);
     Ok(())
 }
 

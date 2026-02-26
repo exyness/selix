@@ -1,8 +1,8 @@
+use crate::errors::SelixError;
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{
     transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked,
 };
-use crate::errors::SelixError;
 
 /// Transfer tokens with checked decimals
 pub fn transfer_tokens<'info>(
@@ -64,13 +64,13 @@ pub fn validate_token_account(
         *expected_mint,
         SelixError::TokenAccountMintMismatch
     );
-    
+
     require_keys_eq!(
         account.owner,
         *expected_authority,
         SelixError::TokenAccountAuthorityMismatch
     );
-    
+
     Ok(())
 }
 

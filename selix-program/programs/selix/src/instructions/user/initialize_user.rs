@@ -1,11 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::{
-    constants::*,
-    errors::SelixError,
-    events::UserProfileCreated,
-    state::UserProfile,
-    utils::*,
+    constants::*, errors::SelixError, events::UserProfileCreated, state::UserProfile, utils::*,
 };
+use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeUserParams {
@@ -82,18 +78,21 @@ pub fn handler(ctx: Context<InitializeUser>, params: InitializeUserParams) -> Re
     });
 
     // User audit log
-    msg!("=== USER PROFILE CREATED ===");
+    msg!("USER PROFILE CREATED");
+    msg!("----------------------");
     msg!("User: {}", ctx.accounts.user.key());
     if let Some(ref_key) = referrer_key {
         msg!("Referrer: {}", ref_key);
     } else {
         msg!("Referrer: None");
     }
-    msg!("Default Listing Duration: {}s", params.default_listing_duration);
+    msg!(
+        "Default Listing Duration: {}s",
+        params.default_listing_duration
+    );
     msg!("Default Slippage BPS: {}", params.default_slippage_bps);
     msg!("Profile Address: {}", ctx.accounts.user_profile.key());
     msg!("Timestamp: {}", current_time);
-    msg!("============================");
-    
+
     Ok(())
 }

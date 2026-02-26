@@ -1,5 +1,3 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use crate::{
     constants::*,
     errors::SelixError,
@@ -7,6 +5,8 @@ use crate::{
     state::{Listing, ListingStatus, UserProfile},
     utils::*,
 };
+use anchor_lang::prelude::*;
+use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
 #[derive(Accounts)]
 pub struct CancelListing<'info> {
@@ -96,7 +96,9 @@ pub fn handler(ctx: Context<CancelListing>) -> Result<()> {
 
     // Update user profile if exists
     if let Some(profile) = &mut ctx.accounts.maker_profile {
-        profile.listings_cancelled = profile.listings_cancelled.checked_add(1)
+        profile.listings_cancelled = profile
+            .listings_cancelled
+            .checked_add(1)
             .ok_or(SelixError::ArithmeticOverflow)?;
         profile.active_listings = profile.active_listings.saturating_sub(1);
         profile.last_activity_at = current_time;
@@ -110,7 +112,8 @@ pub fn handler(ctx: Context<CancelListing>) -> Result<()> {
     });
 
     // Listing audit log
-    msg!("=== LISTING CANCELLED ===");
+    msg!("LISTING CANCELLED");
+    msg!("--------------------");
     msg!("Listing ID: {}", listing.id);
     msg!("Maker: {}", ctx.accounts.maker.key());
     msg!("Status: {:?}", listing.status);
@@ -118,7 +121,6 @@ pub fn handler(ctx: Context<CancelListing>) -> Result<()> {
     msg!("Source Token: {}", ctx.accounts.token_mint_source.key());
     msg!("Vault Closed: {}", ctx.accounts.vault.key());
     msg!("Timestamp: {}", current_time);
-    msg!("=========================");
-    
+
     Ok(())
 }

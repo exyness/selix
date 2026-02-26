@@ -15,9 +15,7 @@ declare_id!("FbTwE39HR4e4bGg5BoA8dJTuPV3ahCUGei1Ro22b4yBy");
 pub mod selix {
     use super::*;
 
-    // ============================================
     // Admin Instructions
-    // ============================================
 
     /// Initialize the platform (one-time setup)
     pub fn initialize_platform(
@@ -28,10 +26,7 @@ pub mod selix {
     }
 
     /// Update platform configuration
-    pub fn update_config(
-        ctx: Context<UpdateConfig>,
-        params: UpdateConfigParams,
-    ) -> Result<()> {
+    pub fn update_config(ctx: Context<UpdateConfig>, params: UpdateConfigParams) -> Result<()> {
         instructions::admin::update_config::handler(ctx, params)
     }
 
@@ -51,30 +46,19 @@ pub mod selix {
     }
 
     /// Manage token whitelist
-    pub fn manage_whitelist(
-        ctx: Context<ManageWhitelist>,
-        is_whitelisted: bool,
-    ) -> Result<()> {
+    pub fn manage_whitelist(ctx: Context<ManageWhitelist>, is_whitelisted: bool) -> Result<()> {
         instructions::admin::manage_whitelist::handler(ctx, is_whitelisted)
     }
 
-    // ============================================
     // Listing Instructions
-    // ============================================
 
     /// Create a new swap listing
-    pub fn create_listing(
-        ctx: Context<CreateListing>,
-        params: CreateListingParams,
-    ) -> Result<()> {
+    pub fn create_listing(ctx: Context<CreateListing>, params: CreateListingParams) -> Result<()> {
         instructions::listing::create_listing::handler(ctx, params)
     }
 
     /// Update an existing listing
-    pub fn update_listing(
-        ctx: Context<UpdateListing>,
-        params: UpdateListingParams,
-    ) -> Result<()> {
+    pub fn update_listing(ctx: Context<UpdateListing>, params: UpdateListingParams) -> Result<()> {
         instructions::listing::update_listing::handler(ctx, params)
     }
 
@@ -88,21 +72,14 @@ pub mod selix {
         instructions::listing::close_expired::handler(ctx)
     }
 
-    // ============================================
     // Trading Instructions
-    // ============================================
 
     /// Execute a swap (full or partial)
-    pub fn execute_swap(
-        ctx: Context<ExecuteSwap>,
-        params: ExecuteSwapParams,
-    ) -> Result<()> {
+    pub fn execute_swap(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<()> {
         instructions::trading::execute_swap::handler(ctx, params)
     }
 
-    // ============================================
     // User Instructions
-    // ============================================
 
     /// Initialize user profile
     pub fn initialize_user(

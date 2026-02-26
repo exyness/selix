@@ -1,11 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::{
-    constants::*,
-    errors::SelixError,
-    events::UserPreferencesUpdated,
-    state::UserProfile,
-    utils::*,
+    constants::*, errors::SelixError, events::UserPreferencesUpdated, state::UserProfile, utils::*,
 };
+use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct UpdatePreferencesParams {
@@ -60,9 +56,13 @@ pub fn handler(ctx: Context<UpdatePreferences>, params: UpdatePreferencesParams)
     });
 
     // User audit log
-    msg!("=== USER PREFERENCES UPDATED ===");
+    msg!("USER PREFERENCES UPDATED");
+    msg!("---------------------------");
     msg!("User: {}", ctx.accounts.user.key());
-    msg!("Default Listing Duration: {}s", profile.default_listing_duration);
+    msg!(
+        "Default Listing Duration: {}s",
+        profile.default_listing_duration
+    );
     msg!("Default Slippage BPS: {}", profile.default_slippage_bps);
     msg!("--- User Stats ---");
     msg!("Listings Created: {}", profile.listings_created);
@@ -71,7 +71,6 @@ pub fn handler(ctx: Context<UpdatePreferences>, params: UpdatePreferencesParams)
     msg!("Volume as Maker: {}", profile.volume_as_maker);
     msg!("Volume as Taker: {}", profile.volume_as_taker);
     msg!("Timestamp: {}", current_time);
-    msg!("=================================");
-    
+
     Ok(())
 }

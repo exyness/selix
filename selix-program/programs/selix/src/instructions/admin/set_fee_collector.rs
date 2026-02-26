@@ -1,10 +1,5 @@
+use crate::{constants::*, errors::SelixError, events::FeeCollectorUpdated, state::Platform};
 use anchor_lang::prelude::*;
-use crate::{
-    constants::*,
-    errors::SelixError,
-    events::FeeCollectorUpdated,
-    state::Platform,
-};
 
 #[derive(Accounts)]
 pub struct SetFeeCollector<'info> {
@@ -39,12 +34,12 @@ pub fn handler(ctx: Context<SetFeeCollector>) -> Result<()> {
     });
 
     // Admin audit log
-    msg!("=== ADMIN ACTION: FEE COLLECTOR UPDATED ===");
+    msg!("ADMIN ACTION: FEE COLLECTOR UPDATED");
+    msg!("-------------------------------------");
     msg!("Authority: {}", ctx.accounts.authority.key());
     msg!("Old Collector: {}", old_collector);
     msg!("New Collector: {}", ctx.accounts.new_fee_collector.key());
     msg!("Timestamp: {}", current_time);
-    msg!("============================================");
-    
+
     Ok(())
 }

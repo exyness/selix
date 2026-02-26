@@ -1,14 +1,14 @@
-use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_interface::{Mint, TokenAccount, TokenInterface},
-};
 use crate::{
     constants::*,
     errors::SelixError,
     events::ListingCreated,
     state::{Listing, ListingStatus, Platform, TokenWhitelist, UserProfile},
     utils::*,
+};
+use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_interface::{Mint, TokenAccount, TokenInterface},
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -111,20 +111,32 @@ pub fn handler(ctx: Context<CreateListing>, params: CreateListingParams) -> Resu
     // Validate whitelist if enabled
     if platform.whitelist_enabled {
         // Source token whitelist check
-        let source_wl = ctx.accounts.source_whitelist.as_ref()
+        let source_wl = ctx
+            .accounts
+            .source_whitelist
+            .as_ref()
             .ok_or(SelixError::TokenNotWhitelisted)?;
         let (expected_source_pda, _) = Pubkey::find_program_address(
-            &[WHITELIST_SEED, ctx.accounts.token_mint_source.key().as_ref()],
+            &[
+                WHITELIST_SEED,
+                ctx.accounts.token_mint_source.key().as_ref(),
+            ],
             ctx.program_id,
         );
         require_keys_eq!(source_wl.key(), expected_source_pda, SelixError::InvalidPDA);
         require!(source_wl.is_whitelisted, SelixError::TokenNotWhitelisted);
 
         // Destination token whitelist check
-        let dest_wl = ctx.accounts.dest_whitelist.as_ref()
+        let dest_wl = ctx
+            .accounts
+            .dest_whitelist
+            .as_ref()
             .ok_or(SelixError::TokenNotWhitelisted)?;
         let (expected_dest_pda, _) = Pubkey::find_program_address(
-            &[WHITELIST_SEED, ctx.accounts.token_mint_destination.key().as_ref()],
+            &[
+                WHITELIST_SEED,
+                ctx.accounts.token_mint_destination.key().as_ref(),
+            ],
             ctx.program_id,
         );
         require_keys_eq!(dest_wl.key(), expected_dest_pda, SelixError::InvalidPDA);
@@ -138,7 +150,10 @@ pub fn handler(ctx: Context<CreateListing>, params: CreateListingParams) -> Resu
     )?;
 
     // Check maker has sufficient balance
-    check_sufficient_balance(&ctx.accounts.maker_token_account_source, params.amount_source)?;
+    check_sufficient_balance(
+        &ctx.accounts.maker_token_account_source,
+        params.amount_source,
+    )?;
 
     // Transfer tokens to vault
     transfer_tokens(
@@ -175,15 +190,21 @@ pub fn handler(ctx: Context<CreateListing>, params: CreateListingParams) -> Resu
 
     // Update user profile
     let profile = &mut ctx.accounts.maker_profile;
-    profile.listings_created = profile.listings_created.checked_add(1)
+    profile.listings_created = profile
+        .listings_created
+        .checked_add(1)
         .ok_or(SelixError::ArithmeticOverflow)?;
-    profile.active_listings = profile.active_listings.checked_add(1)
+    profile.active_listings = profile
+        .active_listings
+        .checked_add(1)
         .ok_or(SelixError::ArithmeticOverflow)?;
     profile.last_activity_at = current_time;
 
     // Update platform stats
     let platform = &mut ctx.accounts.platform;
-    platform.total_listings_created = platform.total_listings_created.checked_add(1)
+    platform.total_listings_created = platform
+        .total_listings_created
+        .checked_add(1)
         .ok_or(SelixError::ArithmeticOverflow)?;
 
     emit!(ListingCreated {
@@ -198,17 +219,20 @@ pub fn handler(ctx: Context<CreateListing>, params: CreateListingParams) -> Resu
         timestamp: current_time,
     });
 
-    msg!("=== LISTING CREATED ===");
+    msg!("LISTING CREATED");
+    msg!("------------------");
     msg!("Listing ID: {}", params.id);
     msg!("Maker: {}", ctx.accounts.maker.key());
     msg!("Source Token: {}", ctx.accounts.token_mint_source.key());
-    msg!("Destination Token: {}", ctx.accounts.token_mint_destination.key());
+    msg!(
+        "Destination Token: {}",
+        ctx.accounts.token_mint_destination.key()
+    );
     msg!("Amount Source: {}", params.amount_source);
     msg!("Amount Destination: {}", params.amount_destination);
     msg!("Min Fill: {}", params.min_fill_amount);
     msg!("Expires At: {}", expires_at);
     msg!("Timestamp: {}", current_time);
-    msg!("=======================");
 
     Ok(())
 }

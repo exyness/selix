@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::state::ListingStatus;
+use anchor_lang::prelude::*;
 
 /// Emitted when platform is initialized
 #[event]
