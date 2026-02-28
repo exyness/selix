@@ -211,9 +211,9 @@ export default function ListingDetailPage() {
     <div className="w-full min-h-screen bg-background text-foreground">
       <Navigation />
 
-      <main className="pt-32 pb-24 px-6 max-w-[1280px] mx-auto">
+      <main className="pt-32 pb-24 px-4 sm:px-6 max-w-[1280px] mx-auto">
         {/* Back Button */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Link href="/listings">
             <Button variant="ghost" size="xs" className="text-muted-foreground gap-1.5">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
@@ -222,14 +222,14 @@ export default function ListingDetailPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Left Column — Listing Details */}
-          <div className="col-span-12 lg:col-span-7 space-y-8">
+          <div className="lg:col-span-7 space-y-6 lg:space-y-8">
 
             {/* Listing Header */}
-            <div className="bg-card border border-border p-8">
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
-                <div className="flex items-center gap-6">
+            <div className="bg-card border border-border p-4 sm:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 lg:mb-8">
+                <div className="flex items-start gap-3 sm:gap-4 lg:gap-6 min-w-0 flex-1">
                   <div className="flex -space-x-3">
                     <div className="relative z-10">
                       <TokenDisplay metadata={sourceTokenMetadata} mint={listing.tokenMintSource.toString()} size="lg" />
@@ -239,7 +239,7 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center gap-3 mb-1">
+                    <div className="flex items-center gap-3 mb-2">
                       <h2 className="text-2xl font-medium">
                         {sourceTokenMetadata?.symbol || formatAddress(listing.tokenMintSource.toString())} 
                         <span className="text-muted-foreground mx-2">→</span> 
@@ -252,8 +252,25 @@ export default function ListingDetailPage() {
                         {isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px] sm:max-w-[300px] md:max-w-none">
+                        {listing.publicKey.toString()}
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon-xs"
+                        className="shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(listing.publicKey.toString());
+                          toast.success('Listing ID copied!');
+                        }}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                        </svg>
+                      </Button>
+                    </div>
                     <div className="flex items-center gap-4 font-mono text-[10px] text-muted-foreground tracking-wider">
-                      <span>ID: {formatAddress(listing.publicKey.toString())}</span>
                       <span>CREATED: {formatDate(listing.createdAt)}</span>
                     </div>
                   </div>
@@ -404,16 +421,16 @@ export default function ListingDetailPage() {
             {/* Maker Info */}
             <div className="bg-card border border-border p-6">
               <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-4">Listing Maker</span>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center border border-border">
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center border border-border shrink-0">
                     <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-                  <span className="text-xs font-mono">{formatAddress(listing.maker.toString())}</span>
+                  <span className="text-xs font-mono truncate">{listing.maker.toString()}</span>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 shrink-0">
                   <Button 
                     variant="ghost" 
                     size="icon-xs"
