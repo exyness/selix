@@ -1,0 +1,3164 @@
+{
+  "address": "J444nFUBaia7rWb9VweAwBUq23pqcPeSQvKvKxVbHMD3",
+  "metadata": {
+    "name": "selix",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "cancel_listing",
+      "docs": [
+        "Cancel a listing and return funds"
+      ],
+      "discriminator": [
+        41,
+        183,
+        50,
+        232,
+        230,
+        233,
+        157,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "maker",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "listing"
+          ]
+        },
+        {
+          "name": "maker_profile",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "maker"
+              }
+            ]
+          }
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "listing.id",
+                "account": "Listing"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "listing"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "maker_token_account_source",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_mint_source"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_expired_listing",
+      "docs": [
+        "Close an expired listing (anyone can call)"
+      ],
+      "discriminator": [
+        150,
+        70,
+        13,
+        135,
+        9,
+        204,
+        75,
+        4
+      ],
+      "accounts": [
+        {
+          "name": "closer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "maker",
+          "writable": true,
+          "relations": [
+            "listing"
+          ]
+        },
+        {
+          "name": "platform",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "platform.authority",
+                "account": "Platform"
+              }
+            ]
+          }
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "listing.id",
+                "account": "Listing"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "listing"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "maker_token_account_source",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_mint_source"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_listing",
+      "docs": [
+        "Create a new swap listing"
+      ],
+      "discriminator": [
+        18,
+        168,
+        45,
+        24,
+        191,
+        31,
+        117,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "maker",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "maker_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "maker"
+              }
+            ]
+          }
+        },
+        {
+          "name": "platform",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "platform.authority",
+                "account": "Platform"
+              }
+            ]
+          }
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "arg",
+                "path": "params.id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "listing"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "maker_token_account_source",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_mint_source"
+        },
+        {
+          "name": "token_mint_destination"
+        },
+        {
+          "name": "source_whitelist",
+          "docs": [
+            "Optional: required when platform.whitelist_enabled is true"
+          ],
+          "optional": true
+        },
+        {
+          "name": "dest_whitelist",
+          "docs": [
+            "Optional: required when platform.whitelist_enabled is true"
+          ],
+          "optional": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CreateListingParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute_swap",
+      "docs": [
+        "Execute a swap (full or partial)"
+      ],
+      "discriminator": [
+        56,
+        182,
+        124,
+        215,
+        155,
+        140,
+        157,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "taker",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "taker_profile",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "maker",
+          "docs": [
+            "Validated via has_one on listing."
+          ],
+          "writable": true,
+          "relations": [
+            "listing"
+          ]
+        },
+        {
+          "name": "maker_profile",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "platform",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "platform.authority",
+                "account": "Platform"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_collector"
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "listing.id",
+                "account": "Listing"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "listing"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "taker_token_account_source",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "taker"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_source"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "taker_token_account_destination",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "taker"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_destination"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "maker_token_account_destination",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_destination"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "fee_collector_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_collector"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint_destination"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_mint_source"
+        },
+        {
+          "name": "token_mint_destination"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ExecuteSwapParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_platform",
+      "docs": [
+        "Initialize the platform (one-time setup)"
+      ],
+      "discriminator": [
+        119,
+        201,
+        101,
+        45,
+        75,
+        122,
+        89,
+        3
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "platform",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_collector"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializePlatformParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_user",
+      "docs": [
+        "Initialize user profile"
+      ],
+      "discriminator": [
+        111,
+        17,
+        185,
+        250,
+        60,
+        122,
+        38,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "referrer",
+          "optional": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeUserParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "manage_whitelist",
+      "docs": [
+        "Manage token whitelist"
+      ],
+      "discriminator": [
+        252,
+        197,
+        13,
+        121,
+        14,
+        54,
+        39,
+        93
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "platform"
+          ]
+        },
+        {
+          "name": "platform",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "whitelist_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "is_whitelisted",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "pause_platform",
+      "docs": [
+        "Pause the platform (emergency stop)"
+      ],
+      "discriminator": [
+        232,
+        46,
+        204,
+        130,
+        181,
+        0,
+        172,
+        57
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "platform"
+          ]
+        },
+        {
+          "name": "platform",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "resume_platform",
+      "docs": [
+        "Resume the platform"
+      ],
+      "discriminator": [
+        23,
+        162,
+        56,
+        123,
+        186,
+        207,
+        109,
+        131
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "platform"
+          ]
+        },
+        {
+          "name": "platform",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_fee_collector",
+      "docs": [
+        "Set fee collector address"
+      ],
+      "discriminator": [
+        143,
+        46,
+        10,
+        113,
+        121,
+        157,
+        245,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "platform"
+          ]
+        },
+        {
+          "name": "platform",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "new_fee_collector"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_config",
+      "docs": [
+        "Update platform configuration"
+      ],
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "platform"
+          ]
+        },
+        {
+          "name": "platform",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateConfigParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_listing",
+      "docs": [
+        "Update an existing listing"
+      ],
+      "discriminator": [
+        192,
+        174,
+        210,
+        68,
+        116,
+        40,
+        242,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "maker",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "listing"
+          ]
+        },
+        {
+          "name": "platform",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "platform.authority",
+                "account": "Platform"
+              }
+            ]
+          }
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "maker"
+              },
+              {
+                "kind": "account",
+                "path": "listing.id",
+                "account": "Listing"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateListingParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_preferences",
+      "docs": [
+        "Update user preferences"
+      ],
+      "discriminator": [
+        16,
+        64,
+        128,
+        133,
+        19,
+        206,
+        101,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "user_profile"
+          ]
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdatePreferencesParams"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Listing",
+      "discriminator": [
+        218,
+        32,
+        50,
+        73,
+        43,
+        134,
+        26,
+        58
+      ]
+    },
+    {
+      "name": "Platform",
+      "discriminator": [
+        77,
+        92,
+        204,
+        58,
+        187,
+        98,
+        91,
+        12
+      ]
+    },
+    {
+      "name": "TokenWhitelist",
+      "discriminator": [
+        105,
+        240,
+        104,
+        47,
+        95,
+        13,
+        48,
+        78
+      ]
+    },
+    {
+      "name": "UserProfile",
+      "discriminator": [
+        32,
+        37,
+        119,
+        205,
+        179,
+        180,
+        13,
+        194
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "FeeCollectorUpdated",
+      "discriminator": [
+        13,
+        42,
+        159,
+        224,
+        200,
+        161,
+        65,
+        247
+      ]
+    },
+    {
+      "name": "ListingCancelled",
+      "discriminator": [
+        11,
+        46,
+        163,
+        10,
+        103,
+        80,
+        139,
+        194
+      ]
+    },
+    {
+      "name": "ListingCreated",
+      "discriminator": [
+        94,
+        164,
+        167,
+        255,
+        246,
+        186,
+        12,
+        96
+      ]
+    },
+    {
+      "name": "ListingExpired",
+      "discriminator": [
+        86,
+        77,
+        98,
+        166,
+        213,
+        159,
+        72,
+        61
+      ]
+    },
+    {
+      "name": "ListingUpdated",
+      "discriminator": [
+        190,
+        215,
+        199,
+        138,
+        255,
+        248,
+        98,
+        62
+      ]
+    },
+    {
+      "name": "PlatformConfigUpdated",
+      "discriminator": [
+        198,
+        206,
+        187,
+        204,
+        148,
+        251,
+        237,
+        25
+      ]
+    },
+    {
+      "name": "PlatformInitialized",
+      "discriminator": [
+        16,
+        222,
+        212,
+        5,
+        213,
+        140,
+        112,
+        162
+      ]
+    },
+    {
+      "name": "PlatformPaused",
+      "discriminator": [
+        110,
+        72,
+        152,
+        13,
+        0,
+        222,
+        149,
+        129
+      ]
+    },
+    {
+      "name": "PlatformResumed",
+      "discriminator": [
+        176,
+        158,
+        132,
+        76,
+        250,
+        110,
+        155,
+        119
+      ]
+    },
+    {
+      "name": "SwapExecuted",
+      "discriminator": [
+        150,
+        166,
+        26,
+        225,
+        28,
+        89,
+        38,
+        79
+      ]
+    },
+    {
+      "name": "TokenWhitelistUpdated",
+      "discriminator": [
+        130,
+        16,
+        11,
+        103,
+        167,
+        150,
+        27,
+        192
+      ]
+    },
+    {
+      "name": "UserPreferencesUpdated",
+      "discriminator": [
+        141,
+        220,
+        200,
+        101,
+        194,
+        16,
+        87,
+        51
+      ]
+    },
+    {
+      "name": "UserProfileCreated",
+      "discriminator": [
+        175,
+        83,
+        79,
+        167,
+        6,
+        194,
+        72,
+        125
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "PlatformPaused",
+      "msg": "Platform is currently paused"
+    },
+    {
+      "code": 6001,
+      "name": "PlatformNotPaused",
+      "msg": "Platform is not paused"
+    },
+    {
+      "code": 6002,
+      "name": "UnauthorizedAuthority",
+      "msg": "Unauthorized: Only platform authority can perform this action"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidFeeConfiguration",
+      "msg": "Invalid fee configuration: must be between 0 and 1000 basis points"
+    },
+    {
+      "code": 6004,
+      "name": "PlatformAlreadyInitialized",
+      "msg": "Platform already initialized"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidDurationBounds",
+      "msg": "Invalid duration bounds: min must be less than max"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount: must be greater than zero"
+    },
+    {
+      "code": 6007,
+      "name": "AmountTooSmall",
+      "msg": "Amount too small: below minimum trade amount"
+    },
+    {
+      "code": 6008,
+      "name": "SameTokenMints",
+      "msg": "Invalid token mints: source and destination must be different"
+    },
+    {
+      "code": 6009,
+      "name": "DurationTooShort",
+      "msg": "Listing duration too short"
+    },
+    {
+      "code": 6010,
+      "name": "DurationTooLong",
+      "msg": "Listing duration too long"
+    },
+    {
+      "code": 6011,
+      "name": "ListingExpired",
+      "msg": "Listing has expired"
+    },
+    {
+      "code": 6012,
+      "name": "ListingNotActive",
+      "msg": "Listing is not active"
+    },
+    {
+      "code": 6013,
+      "name": "ListingAlreadyCompleted",
+      "msg": "Listing already completed"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidListingStatus",
+      "msg": "Invalid listing status for this operation"
+    },
+    {
+      "code": 6015,
+      "name": "MaxListingsReached",
+      "msg": "User has reached maximum active listings limit"
+    },
+    {
+      "code": 6016,
+      "name": "MinFillAmountTooLarge",
+      "msg": "Minimum fill amount too large"
+    },
+    {
+      "code": 6017,
+      "name": "ListingNotExpired",
+      "msg": "Listing not expired yet"
+    },
+    {
+      "code": 6018,
+      "name": "SlippageExceeded",
+      "msg": "Slippage tolerance exceeded"
+    },
+    {
+      "code": 6019,
+      "name": "FillAmountTooSmall",
+      "msg": "Fill amount below minimum"
+    },
+    {
+      "code": 6020,
+      "name": "InsufficientMakerBalance",
+      "msg": "Insufficient maker balance"
+    },
+    {
+      "code": 6021,
+      "name": "InsufficientTakerBalance",
+      "msg": "Insufficient taker balance"
+    },
+    {
+      "code": 6022,
+      "name": "SwapAmountExceedsRemaining",
+      "msg": "Invalid swap amount: exceeds remaining"
+    },
+    {
+      "code": 6023,
+      "name": "CannotSwapOwnListing",
+      "msg": "Cannot swap with own listing"
+    },
+    {
+      "code": 6024,
+      "name": "TokenNotWhitelisted",
+      "msg": "Token mint not whitelisted"
+    },
+    {
+      "code": 6025,
+      "name": "TokenBlacklisted",
+      "msg": "Token mint is blacklisted"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidTokenAccount",
+      "msg": "Invalid token account"
+    },
+    {
+      "code": 6027,
+      "name": "TokenAccountMintMismatch",
+      "msg": "Token account mint mismatch"
+    },
+    {
+      "code": 6028,
+      "name": "TokenAccountAuthorityMismatch",
+      "msg": "Token account authority mismatch"
+    },
+    {
+      "code": 6029,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6030,
+      "name": "ArithmeticUnderflow",
+      "msg": "Arithmetic underflow"
+    },
+    {
+      "code": 6031,
+      "name": "DivisionByZero",
+      "msg": "Division by zero"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidCalculation",
+      "msg": "Invalid calculation result"
+    },
+    {
+      "code": 6033,
+      "name": "UserProfileAlreadyExists",
+      "msg": "User profile already exists"
+    },
+    {
+      "code": 6034,
+      "name": "UserProfileNotFound",
+      "msg": "User profile not found"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidReferrer",
+      "msg": "Invalid referrer"
+    },
+    {
+      "code": 6036,
+      "name": "VaultDepositFailed",
+      "msg": "Failed to transfer tokens to vault"
+    },
+    {
+      "code": 6037,
+      "name": "VaultWithdrawalFailed",
+      "msg": "Failed to withdraw tokens from vault"
+    },
+    {
+      "code": 6038,
+      "name": "VaultClosureFailed",
+      "msg": "Failed to close vault"
+    },
+    {
+      "code": 6039,
+      "name": "VaultBalanceMismatch",
+      "msg": "Vault balance mismatch"
+    },
+    {
+      "code": 6040,
+      "name": "InvalidPDA",
+      "msg": "Invalid PDA derivation"
+    },
+    {
+      "code": 6041,
+      "name": "AccountAlreadyClosed",
+      "msg": "Account already closed"
+    },
+    {
+      "code": 6042,
+      "name": "InvalidAccountOwner",
+      "msg": "Invalid account owner"
+    },
+    {
+      "code": 6043,
+      "name": "AccountNotInitialized",
+      "msg": "Account not initialized"
+    }
+  ],
+  "types": [
+    {
+      "name": "CreateListingParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "amount_source",
+            "type": "u64"
+          },
+          {
+            "name": "amount_destination",
+            "type": "u64"
+          },
+          {
+            "name": "min_fill_amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_slippage_bps",
+            "type": "u16"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExecuteSwapParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_source",
+            "type": "u64"
+          },
+          {
+            "name": "max_amount_destination",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeCollectorUpdated",
+      "docs": [
+        "Emitted when fee collector is updated"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_collector",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_collector",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePlatformParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fee_basis_points",
+            "type": "u16"
+          },
+          {
+            "name": "min_listing_duration",
+            "type": "i64"
+          },
+          {
+            "name": "max_listing_duration",
+            "type": "i64"
+          },
+          {
+            "name": "min_trade_amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_listings_per_user",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeUserParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "referrer",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "default_listing_duration",
+            "type": "i64"
+          },
+          {
+            "name": "default_slippage_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Listing",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "docs": [
+              "Unique listing identifier"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "maker",
+            "docs": [
+              "Listing creator"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint_source",
+            "docs": [
+              "Token being offered (source)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint_destination",
+            "docs": [
+              "Token being requested (destination)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_source_total",
+            "docs": [
+              "Original amount of source tokens"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "amount_source_remaining",
+            "docs": [
+              "Remaining amount of source tokens"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "amount_destination_total",
+            "docs": [
+              "Original amount of destination tokens wanted"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "amount_destination_remaining",
+            "docs": [
+              "Remaining amount of destination tokens wanted"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_fill_amount",
+            "docs": [
+              "Minimum fill amount (for partial swaps)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_slippage_bps",
+            "docs": [
+              "Maximum slippage tolerance in basis points"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "expires_at",
+            "docs": [
+              "Listing expiration timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Listing creation timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "docs": [
+              "Last update timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "docs": [
+              "Current status"
+            ],
+            "type": {
+              "defined": {
+                "name": "ListingStatus"
+              }
+            }
+          },
+          {
+            "name": "fill_count",
+            "docs": [
+              "Number of partial fills executed"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingCancelled",
+      "docs": [
+        "Emitted when a listing is cancelled"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "listing_id",
+            "type": "u64"
+          },
+          {
+            "name": "maker",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_returned",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingCreated",
+      "docs": [
+        "Emitted when a new listing is created"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "listing_id",
+            "type": "u64"
+          },
+          {
+            "name": "maker",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint_source",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint_destination",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_source",
+            "type": "u64"
+          },
+          {
+            "name": "amount_destination",
+            "type": "u64"
+          },
+          {
+            "name": "min_fill_amount",
+            "type": "u64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingExpired",
+      "docs": [
+        "Emitted when a listing expires"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "listing_id",
+            "type": "u64"
+          },
+          {
+            "name": "maker",
+            "type": "pubkey"
+          },
+          {
+            "name": "closer",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_returned",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "PartiallyFilled"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Cancelled"
+          },
+          {
+            "name": "Expired"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingUpdated",
+      "docs": [
+        "Emitted when a listing is updated"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "listing_id",
+            "type": "u64"
+          },
+          {
+            "name": "maker",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_amount_destination",
+            "type": "u64"
+          },
+          {
+            "name": "new_amount_destination",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Platform",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "Platform authority (can update config)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_collector",
+            "docs": [
+              "Fee collector address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_basis_points",
+            "docs": [
+              "Trading fee in basis points (0-1000 = 0-10%)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "min_listing_duration",
+            "docs": [
+              "Minimum listing duration in seconds"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "max_listing_duration",
+            "docs": [
+              "Maximum listing duration in seconds"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "min_trade_amount",
+            "docs": [
+              "Minimum trade amount (prevents dust)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_listings_per_user",
+            "docs": [
+              "Maximum active listings per user"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "is_paused",
+            "docs": [
+              "Platform paused state"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "whitelist_enabled",
+            "docs": [
+              "Whitelist enabled (if true, only whitelisted tokens allowed)"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "total_listings_created",
+            "docs": [
+              "Total listings created (counter)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_swaps_executed",
+            "docs": [
+              "Total swaps executed (counter)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_volume_traded",
+            "docs": [
+              "Total volume traded (in lamports equivalent)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_fees_collected",
+            "docs": [
+              "Total fees collected"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Platform creation timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "docs": [
+              "Last config update timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformConfigUpdated",
+      "docs": [
+        "Emitted when platform config is updated"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_basis_points",
+            "type": "u16"
+          },
+          {
+            "name": "min_listing_duration",
+            "type": "i64"
+          },
+          {
+            "name": "max_listing_duration",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformInitialized",
+      "docs": [
+        "Emitted when platform is initialized"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_collector",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_basis_points",
+            "type": "u16"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformPaused",
+      "docs": [
+        "Emitted when platform is paused"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformResumed",
+      "docs": [
+        "Emitted when platform is resumed"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapExecuted",
+      "docs": [
+        "Emitted when a swap is executed"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "listing_id",
+            "type": "u64"
+          },
+          {
+            "name": "maker",
+            "type": "pubkey"
+          },
+          {
+            "name": "taker",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint_source",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint_destination",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_source",
+            "type": "u64"
+          },
+          {
+            "name": "amount_destination",
+            "type": "u64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "is_partial",
+            "type": "bool"
+          },
+          {
+            "name": "remaining_source",
+            "type": "u64"
+          },
+          {
+            "name": "new_status",
+            "type": {
+              "defined": {
+                "name": "ListingStatus"
+              }
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenWhitelist",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "docs": [
+              "The token mint this entry refers to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "is_whitelisted",
+            "docs": [
+              "Whether the token is currently whitelisted"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "updated_at",
+            "docs": [
+              "Timestamp when this entry was created or last updated"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenWhitelistUpdated",
+      "docs": [
+        "Emitted when token whitelist is updated"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "is_whitelisted",
+            "type": "bool"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateConfigParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fee_basis_points",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "min_listing_duration",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "max_listing_duration",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "min_trade_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "max_listings_per_user",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "whitelist_enabled",
+            "type": {
+              "option": "bool"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateListingParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_amount_destination",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "new_min_fill_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "new_max_slippage_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "extend_duration_seconds",
+            "type": {
+              "option": "i64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdatePreferencesParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "default_listing_duration",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "default_slippage_bps",
+            "type": {
+              "option": "u16"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserPreferencesUpdated",
+      "docs": [
+        "Emitted when user preferences are updated"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "default_listing_duration",
+            "type": "i64"
+          },
+          {
+            "name": "default_slippage_bps",
+            "type": "u16"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "docs": [
+              "User wallet address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "referrer",
+            "docs": [
+              "Referrer (if any)"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "listings_created",
+            "docs": [
+              "Total listings created"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "listings_cancelled",
+            "docs": [
+              "Total listings cancelled"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "swaps_executed",
+            "docs": [
+              "Total swaps executed (as taker)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "swaps_received",
+            "docs": [
+              "Total swaps received (as maker)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "active_listings",
+            "docs": [
+              "Current active listings count"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "volume_as_maker",
+            "docs": [
+              "Total volume as maker (in lamports)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "volume_as_taker",
+            "docs": [
+              "Total volume as taker (in lamports)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_fees_paid",
+            "docs": [
+              "Total fees paid"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "default_listing_duration",
+            "docs": [
+              "Default listing duration (seconds)"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "default_slippage_bps",
+            "docs": [
+              "Default slippage tolerance (basis points)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Account creation timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "last_activity_at",
+            "docs": [
+              "Last activity timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserProfileCreated",
+      "docs": [
+        "Emitted when a user profile is created"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "referrer",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}
