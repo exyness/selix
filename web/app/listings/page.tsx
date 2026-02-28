@@ -25,6 +25,55 @@ function formatAddress(address: string) {
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
 }
 
+function isListingExpired(expiresAt: bigint): boolean {
+  const now = Math.floor(Date.now() / 1000);
+  return Number(expiresAt) <= now;
+}
+
+function getListingStatus(listing: any): { label: string; className: string } {
+  const isExpired = isListingExpired(listing.expiresAt);
+  
+  if (isExpired) {
+    return {
+      label: 'Expired',
+      className: 'text-red-500 bg-red-500/10 border-red-500/20'
+    };
+  }
+  
+  if (listing.status.completed !== undefined) {
+    return {
+      label: 'Completed',
+      className: 'text-blue-500 bg-blue-500/10 border-blue-500/20'
+    };
+  }
+  
+  if (listing.status.cancelled !== undefined) {
+    return {
+      label: 'Cancelled',
+      className: 'text-gray-500 bg-gray-500/10 border-gray-500/20'
+    };
+  }
+  
+  if (listing.status.active !== undefined) {
+    return {
+      label: 'Active',
+      className: 'text-green-500 bg-green-500/10 border-green-500/20'
+    };
+  }
+  
+  if (listing.status.partiallyFilled !== undefined) {
+    return {
+      label: 'Partial',
+      className: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20'
+    };
+  }
+  
+  return {
+    label: 'Unknown',
+    className: 'text-muted-foreground bg-muted'
+  };
+}
+
 export default function MarketplacePage() {
   const [sortMode, setSortMode] = useState<'best' | 'expiring' | 'newest'>('best');
   const [searchQuery, setSearchQuery] = useState('');
@@ -129,11 +178,15 @@ export default function MarketplacePage() {
     
     // Status filter
     if (statusFilter === 'active') {
-      filtered = filtered.filter(listing => listing.status.active !== undefined);
+      filtered = filtered.filter(listing => {
+        const isExpired = isListingExpired(listing.expiresAt);
+        return listing.status.active !== undefined && !isExpired;
+      });
     } else if (statusFilter === 'partial') {
       filtered = filtered.filter(listing => {
         const filled = Number(listing.amountSourceTotal - listing.amountSourceRemaining);
-        return filled > 0 && listing.amountSourceRemaining > 0n;
+        const isExpired = isListingExpired(listing.expiresAt);
+        return filled > 0 && listing.amountSourceRemaining > 0n && !isExpired;
       });
     }
     
@@ -194,25 +247,35 @@ export default function MarketplacePage() {
             <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Marketplace</h1>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1 md:max-w-2xl">
             <Input
               placeholder="Search by ID or Maker..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-64 md:w-80 bg-card border-border font-mono text-[11px]"
+              className="flex-1 bg-card border-border font-mono text-[11px]"
             />
-            <div className="flex bg-card border border-border p-1">
-              {(['best', 'expiring', 'newest'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setSortMode(mode)}
-                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
-                    sortMode === mode ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {mode === 'best' ? 'Best Rate' : mode === 'expiring' ? 'Expiring' : 'Newest'}
-                </button>
-              ))}
+            <div className="flex gap-3">
+              <div className="flex bg-card border border-border p-1">
+                {(['best', 'expiring', 'newest'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setSortMode(mode)}
+                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+                      sortMode === mode ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {mode === 'best' ? 'Best Rate' : mode === 'expiring' ? 'Expiring' : 'Newest'}
+                  </button>
+                ))}
+              </div>
+              <Link href="/create">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-[10px] uppercase tracking-wider px-6 whitespace-nowrap">
+                  <svg className="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -356,6 +419,7 @@ export default function MarketplacePage() {
                     const sourceMetadata = getTokenMetadata(listing.tokenMintSource.toString());
                     const destMetadata = getTokenMetadata(listing.tokenMintDestination.toString());
                     const remaining = formatTokenAmount(listing.amountSourceRemaining, sourceMetadata?.decimals || 9);
+                    const status = getListingStatus(listing);
                     
                     return (
                       <Link key={listing.publicKey.toString()} href={`/listings/${listing.publicKey.toString()}`}>
@@ -378,8 +442,8 @@ export default function MarketplacePage() {
                                 </div>
                               </div>
                             </div>
-                            <Badge className={listing.status.active !== undefined ? 'text-green-500 bg-green-500/10 border-green-500/20' : 'text-muted-foreground bg-muted'}>
-                              {listing.status.active !== undefined ? 'Active' : 'Inactive'}
+                            <Badge className={status.className}>
+                              {status.label}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
@@ -414,6 +478,7 @@ export default function MarketplacePage() {
                         const destMetadata = getTokenMetadata(listing.tokenMintDestination.toString());
                         const remaining = formatTokenAmount(listing.amountSourceRemaining, sourceMetadata?.decimals || 9);
                         const total = formatTokenAmount(listing.amountSourceTotal, sourceMetadata?.decimals || 9);
+                        const status = getListingStatus(listing);
                         
                         return (
                           <tr key={listing.publicKey.toString()} className="hover:bg-muted/50 transition-colors group">
@@ -480,13 +545,8 @@ export default function MarketplacePage() {
                               </div>
                             </td>
                             <td className="px-4 xl:px-6 py-4 sm:py-6">
-                              <Badge
-                                className={listing.status.active !== undefined
-                                  ? 'text-green-500 bg-green-500/10 border-green-500/20'
-                                  : 'text-muted-foreground bg-muted'
-                                }
-                              >
-                                {listing.status.active !== undefined ? 'Active' : 'Inactive'}
+                              <Badge className={status.className}>
+                                {status.label}
                               </Badge>
                             </td>
                             <td className="px-4 xl:px-6 py-4 sm:py-6 text-right">

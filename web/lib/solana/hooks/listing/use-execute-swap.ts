@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useProgram } from '../../use-program';
 import { getUserProfilePDA, getPlatformPDA } from '@/lib/anchor/setup';
 import { toast } from 'sonner';
@@ -18,19 +19,44 @@ export interface ExecuteSwapParams {
 
 export function useExecuteSwap() {
   const { program, wallet } = useProgram();
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const executeSwap = async (params: ExecuteSwapParams) => {
-    if (!program || !wallet.publicKey) {
-      toast.error('Please connect your wallet');
-      return null;
-    }
+  const mutation = useMutation({
+    mutationFn: async (params: ExecuteSwapParams) => {
+      if (!program || !wallet.publicKey) {
+        throw new Error('Wallet not connected');
+      }
 
-    setLoading(true);
-    try {
+      // Fetch platform - need to get it from all accounts since we don't know the authority
+      const platformAccounts = await program.account.platform.all();
+      if (platformAccounts.length === 0) {
+        throw new Error('Platform not initialized. Please contact the administrator.');
+      }
+      
+      const platform = platformAccounts[0].publicKey;
+      const platformData = platformAccounts[0].account;
+      const feeCollector = platformData.feeCollector;
+      
       const [takerProfile] = getUserProfilePDA(wallet.publicKey);
       const [makerProfile] = getUserProfilePDA(params.maker);
-      const [platform] = getPlatformPDA();
+      
+      // Check if profiles exist using fetchNullable
+      const takerProfileData = await program.account.userProfile.fetchNullable(takerProfile);
+      const makerProfileData = await program.account.userProfile.fetchNullable(makerProfile);
+      
+      // Fetch listing to calculate proper destination amount
+      const listingData = await program.account.listing.fetch(params.listing);
+      
+      // Calculate proportional destination amount based on listing's rate
+      const sourceAmount = BigInt(params.fillAmount);
+      const totalSource = BigInt(listingData.amountSourceTotal.toString());
+      const totalDestination = BigInt(listingData.amountDestinationTotal.toString());
+      
+      // Calculate: (fillAmount * totalDestination) / totalSource
+      const expectedDestination = (sourceAmount * totalDestination) / totalSource;
+      
+      // Add 1% slippage tolerance
+      const maxDestination = (expectedDestination * BigInt(101)) / BigInt(100);
       
       // Determine token program
       let tokenProgram = TOKEN_PROGRAM_ID;
@@ -56,53 +82,73 @@ export function useExecuteSwap() {
         params.requestedMint,
         wallet.publicKey,
         false,
-        TOKEN_2022_PROGRAM_ID
+        tokenProgram
       );
 
       const takerRequestedAta = getAssociatedTokenAddressSync(
         params.offeredMint,
         wallet.publicKey,
         false,
-        TOKEN_2022_PROGRAM_ID
+        tokenProgram
       );
 
       const makerRequestedAta = getAssociatedTokenAddressSync(
         params.requestedMint,
         params.maker,
         false,
-        TOKEN_2022_PROGRAM_ID
+        tokenProgram
       );
+
+      const feeCollectorTokenAccount = getAssociatedTokenAddressSync(
+        params.requestedMint,
+        feeCollector,
+        false,
+        tokenProgram
+      );
+
+      // For optional accounts, pass program ID if they don't exist
+      const accounts: any = {
+        taker: wallet.publicKey,
+        takerProfile: takerProfileData ? takerProfile : program.programId,
+        maker: params.maker,
+        makerProfile: makerProfileData ? makerProfile : program.programId,
+        platform,
+        feeCollector,
+        listing: params.listing,
+        vault,
+        takerTokenAccountSource: takerRequestedAta,
+        takerTokenAccountDestination: takerOfferedAta,
+        makerTokenAccountDestination: makerRequestedAta,
+        feeCollectorTokenAccount,
+        tokenMintSource: params.offeredMint,
+        tokenMintDestination: params.requestedMint,
+        tokenProgram,
+      };
 
       const tx = await program.methods
         .executeSwap({
-          fillAmount: new BN(params.fillAmount),
+          amountSource: new BN(params.fillAmount),
+          maxAmountDestination: new BN(maxDestination.toString()),
         })
-        .accounts({
-          taker: wallet.publicKey,
-          takerProfile,
-          makerProfile,
-          platform,
-          listing: params.listing,
-          vault,
-          tokenMintSource: params.offeredMint,
-          tokenMintDestination: params.requestedMint,
-          takerTokenAccountSource: takerRequestedAta,
-          takerTokenAccountDestination: takerOfferedAta,
-          makerTokenAccountDestination: makerRequestedAta,
-        })
+        .accounts(accounts)
         .rpc();
 
-      toast.success('Swap executed successfully!');
       return { signature: tx };
-    } catch (error: unknown) {
+    },
+    onSuccess: () => {
+      // Invalidate and refetch listings
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      toast.success('Swap executed successfully!');
+    },
+    onError: (error: unknown) => {
       console.error('Error executing swap:', error);
       const message = error instanceof Error ? error.message : 'Failed to execute swap';
       toast.error(message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
-  return { executeSwap, loading };
+  return {
+    executeSwap: mutation.mutateAsync,
+    loading: mutation.isPending,
+  };
 }

@@ -20,7 +20,7 @@ export interface Listing {
   expiresAt: BN;
   createdAt: BN;
   updatedAt: BN;
-  status: { active?: {} } | { completed?: {} } | { cancelled?: {} } | { expired?: {} };
+  status: { active?: {} } | { partiallyFilled?: {} } | { completed?: {} } | { cancelled?: {} } | { expired?: {} };
   fillCount: number;
   bump: number;
 }
@@ -39,8 +39,9 @@ export function useFetchListings() {
         ...account.account,
       })) as Listing[];
       
+      // Show active and partially filled listings
       const activeListings = listingsData.filter(
-        (listing) => listing.status.active !== undefined
+        (listing) => listing.status.active !== undefined || listing.status.partiallyFilled !== undefined
       );
       
       return activeListings;
