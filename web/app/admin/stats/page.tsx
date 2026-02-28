@@ -16,7 +16,7 @@ export default function PlatformStatisticsPage() {
         <header className="mb-10 flex items-end justify-between">
           <div>
             <div className="text-[10px] font-mono text-[#0CA5B0] tracking-[0.3em] uppercase mb-2">
-              /// Platform Analytics
+              {"/// Platform Analytics"}
             </div>
             <h1 className="text-4xl font-mono font-bold tracking-tight text-white uppercase">
               Statistics

@@ -8,20 +8,20 @@ export default function StatsBar() {
   const stats = [
     { 
       label: 'Total Listings Created', 
-      value: loading ? '...' : platform ? platform.totalListings.toString() : '0'
+      value: loading ? '...' : platform ? platform.totalListingsCreated.toString() : '0'
     },
     { 
       label: 'Total Swaps Executed', 
-      value: loading ? '...' : platform ? platform.totalSwaps.toString() : '0',
+      value: loading ? '...' : platform ? platform.totalSwapsExecuted.toString() : '0',
       highlight: true 
     },
     { 
       label: 'Total Volume Traded', 
-      value: loading ? '...' : platform ? `${(Number(platform.totalVolume) / 1e9).toFixed(2)} SOL` : '0 SOL'
+      value: loading ? '...' : platform ? `${(Number(platform.totalVolumeTraded) / 1e9).toFixed(2)} SOL` : '0 SOL'
     },
     { 
       label: 'Total Fees Collected', 
-      value: loading ? '...' : platform ? `${(Number(platform.feesCollected) / 1e9).toFixed(2)} SOL` : '0 SOL'
+      value: loading ? '...' : platform ? `${(Number(platform.totalFeesCollected) / 1e9).toFixed(2)} SOL` : '0 SOL'
     }
   ];
 

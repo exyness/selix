@@ -34,9 +34,9 @@ export default function Navigation() {
             Market
           </Link>
           <Link 
-            href="/my-listings" 
+            href="/user/listings" 
             className={`text-[11px] font-mono font-medium transition-colors tracking-widest uppercase ${
-              isActive('/my-listings') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
+              isActive('/user/listings') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             My Listings

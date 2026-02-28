@@ -31,8 +31,8 @@ export default function Footer() {
           <ul className="space-y-3 md:space-y-4 text-muted-foreground text-xs font-mono">
             <li><Link href="/listings" className="hover:text-primary transition-colors">Market</Link></li>
             <li><Link href="/create" className="hover:text-primary transition-colors">Create Listing</Link></li>
-            <li><Link href="/my-listings" className="hover:text-primary transition-colors">My Listings</Link></li>
-            <li><Link href="/my-swaps" className="hover:text-primary transition-colors">My Swaps</Link></li>
+            <li><Link href="/user/listings" className="hover:text-primary transition-colors">My Listings</Link></li>
+            <li><Link href="/user/swaps" className="hover:text-primary transition-colors">My Swaps</Link></li>
           </ul>
         </div>
         <div>
