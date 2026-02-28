@@ -1,36 +1,215 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Selix Protocol - Web Application
+
+Next.js frontend for the Selix Protocol decentralized token swap platform on Solana.
+
+## Features
+
+- **Marketplace** - Browse and search token swap listings
+- **Create Listings** - List your tokens for swap with custom parameters
+- **Execute Swaps** - Swap tokens with other users (full or partial fills)
+- **My Listings** - Manage your active, completed, and cancelled listings
+- **My Swaps** - View your swap history with detailed transaction data
+- **User Profiles** - Track activity, volume, and statistics
+- **Admin Dashboard** - Platform management and configuration (admin only)
+- **Theme Support** - Light and dark mode with system preference detection
+- **Wallet Integration** - Support for Phantom, Solflare, and other Solana wallets
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI
+- **Wallet**: Solana Wallet Adapter
+- **State Management**: TanStack Query
+- **Blockchain**: Anchor/Solana Web3.js
+- **Notifications**: Sonner (toast notifications)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18 or higher
+- Yarn package manager
+- A Solana wallet extension (Phantom, Solflare, etc.)
+
+### Installation
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Edit `.env.local` with your configuration:
+```env
+NEXT_PUBLIC_SOLANA_NETWORK=devnet
+NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Run the development server:
+```bash
+yarn dev
+```
 
-## Learn More
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-To learn more about Next.js, take a look at the following resources:
+### Build for Production
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+yarn build
+yarn start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+web/
+├── app/                    # Next.js app router pages
+│   ├── listings/          # Marketplace and listing pages
+│   ├── user/              # User-specific pages
+│   └── admin/             # Admin dashboard
+├── components/            # React components
+│   ├── layout/           # Navigation, footer, etc.
+│   ├── ui/               # Reusable UI components
+│   └── wallet/           # Wallet connection components
+├── lib/                   # Utilities and hooks
+│   ├── solana/           # Solana/Anchor integration
+│   └── anchor/           # Program IDL and setup
+└── public/               # Static assets
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Key Features
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Marketplace
+- Browse all active listings
+- Filter by token pairs
+- Search functionality
+- Real-time updates
+
+### Listing Management
+- Create new listings with custom parameters
+- View your active listings
+- Cancel listings
+- Update listing parameters
+- Track fill progress
+
+### Swap Execution
+- Execute full or partial swaps
+- Slippage protection
+- Fee calculation
+- Transaction confirmation
+
+### User Profiles
+- View any user's profile by address
+- Activity statistics
+- Volume tracking
+- Referral information
+
+### Admin Dashboard
+- Platform configuration
+- Fee management
+- Token whitelist
+- Pause/resume platform
+
+## Wallet Integration
+
+The application supports multiple Solana wallets through the Wallet Adapter:
+- Phantom
+- Solflare
+- Backpack
+- And more...
+
+Connect your wallet using the button in the navigation bar.
+
+## Theme Support
+
+The application supports light and dark themes:
+- Toggle using the theme button in navigation
+- Respects system preferences
+- Persistent across sessions
+
+## Development
+
+### Available Scripts
+
+```bash
+# Development server
+yarn dev
+
+# Build for production
+yarn build
+
+# Start production server
+yarn start
+
+# Lint code
+yarn lint
+
+# Type check
+yarn type-check
+```
+
+### Code Style
+
+- TypeScript for type safety
+- ESLint for code quality
+- Prettier for formatting
+- Tailwind CSS for styling
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_SOLANA_NETWORK` | Solana network (mainnet-beta, devnet, testnet) | devnet |
+| `NEXT_PUBLIC_SOLANA_RPC_URL` | RPC endpoint URL | https://api.devnet.solana.com |
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Import project in Vercel
+3. Configure environment variables
+4. Deploy
+
+### Other Platforms
+
+The application can be deployed to any platform that supports Next.js:
+- Netlify
+- AWS Amplify
+- Railway
+- Self-hosted
+
+## Troubleshooting
+
+### Wallet Connection Issues
+- Ensure wallet extension is installed
+- Check network matches (devnet/mainnet)
+- Try refreshing the page
+
+### Transaction Failures
+- Check wallet balance for fees
+- Verify token accounts exist
+- Check platform is not paused
+
+### RPC Issues
+- Try a different RPC endpoint
+- Check rate limits
+- Use a custom RPC provider
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License - see [LICENSE](../LICENSE) for details
