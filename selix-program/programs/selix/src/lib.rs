@@ -9,7 +9,7 @@ pub mod utils;
 
 use instructions::*;
 
-declare_id!("FbTwE39HR4e4bGg5BoA8dJTuPV3ahCUGei1Ro22b4yBy");
+declare_id!("J444nFUBaia7rWb9VweAwBUq23pqcPeSQvKvKxVbHMD3");
 
 #[program]
 pub mod selix {
