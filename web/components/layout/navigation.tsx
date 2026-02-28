@@ -55,12 +55,20 @@ export default function Navigation() {
             Market
           </Link>
           <Link 
-            href="/user/listings" 
+            href="/user/my-listings" 
             className={`text-[11px] font-mono font-medium transition-colors tracking-widest uppercase ${
-              isActive('/user/listings') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
+              isActive('/user/my-listings') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             My Listings
+          </Link>
+          <Link 
+            href="/user/my-swaps" 
+            className={`text-[11px] font-mono font-medium transition-colors tracking-widest uppercase ${
+              isActive('/user/my-swaps') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            My Swaps
           </Link>
           {isAuthority && (
             <Link 
