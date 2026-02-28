@@ -1,27 +1,24 @@
 'use client';
 
-import { usePlatform } from '@/lib/solana/hooks';
-
 export default function StatsBar() {
-  const { platform, loading } = usePlatform();
-
+  // Static stats for landing page - no RPC calls
   const stats = [
     { 
       label: 'Total Listings Created', 
-      value: loading ? '...' : platform ? platform.totalListingsCreated.toString() : '0'
+      value: '0'
     },
     { 
       label: 'Total Swaps Executed', 
-      value: loading ? '...' : platform ? platform.totalSwapsExecuted.toString() : '0',
+      value: '0',
       highlight: true 
     },
     { 
       label: 'Total Volume Traded', 
-      value: loading ? '...' : platform ? `${(Number(platform.totalVolumeTraded) / 1e9).toFixed(2)} SOL` : '0 SOL'
+      value: '0 SOL'
     },
     { 
       label: 'Total Fees Collected', 
-      value: loading ? '...' : platform ? `${(Number(platform.totalFeesCollected) / 1e9).toFixed(2)} SOL` : '0 SOL'
+      value: '0 SOL'
     }
   ];
 

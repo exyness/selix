@@ -30,7 +30,7 @@ export default function StatusBar() {
       return;
     }
 
-    // Fetch balance
+    // Fetch balance once on connect
     const fetchBalance = async () => {
       try {
         const bal = await connection.getBalance(publicKey);
@@ -42,10 +42,6 @@ export default function StatusBar() {
     };
 
     fetchBalance();
-    
-    // Refresh balance every 10 seconds
-    const interval = setInterval(fetchBalance, 10000);
-    return () => clearInterval(interval);
   }, [connection, publicKey, connected]);
 
   return (
