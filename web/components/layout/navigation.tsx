@@ -33,14 +33,16 @@ export default function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-5 bg-background/90 backdrop-blur-md border-b border-border">
       <Link href="/" className="flex items-center gap-3">
-        <Image 
-          src={logoSrc} 
-          alt="Selix Protocol" 
-          width={120} 
-          height={32}
-          className="h-8 w-auto"
-          priority
-        />
+        <div className="relative h-8 w-[120px]">
+          <Image 
+            src={logoSrc} 
+            alt="Selix Protocol" 
+            fill
+            className="object-contain object-left"
+            priority
+            sizes="120px"
+          />
+        </div>
       </Link>
       <div className="flex items-center gap-4 md:gap-6">
         <div className="hidden md:flex items-center gap-6 lg:gap-10">

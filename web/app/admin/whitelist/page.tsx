@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import Link from 'next/link';
+import { Coins } from 'lucide-react';
 import Navigation from '@/components/layout/navigation';
 import StatusBar from '@/components/layout/status-bar';
 import { Button } from '@/components/ui/button';
@@ -27,8 +28,128 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAllWhitelisted, usePlatform, useAdmin } from '@/lib/solana/hooks';
+import { useTokenMetadata } from '@/lib/solana/hooks/token/use-token-metadata';
 import { toast } from 'sonner';
 import WalletRequired from '@/components/wallet/wallet-required';
+
+function TokenCard({ token, isAuthority, adminLoading, onRemove }: any) {
+  const { metadata, loading: metadataLoading } = useTokenMetadata(token.mint);
+  
+  const mintStr = token.mint.toString();
+  const shortMint = `${mintStr.slice(0, 4)}...${mintStr.slice(-4)}`;
+  const addedDate = new Date(Number(token.updatedAt) * 1000).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  return (
+    <div className="bg-card border border-border p-6 relative group hover:border-primary/30 transition-all">
+      {/* Approved Badge */}
+      <div className="absolute top-4 right-4">
+        <Badge className="bg-primary/10 text-primary border-primary/40 text-[8px]">
+          APPROVED
+        </Badge>
+      </div>
+
+      {/* Token Header */}
+      <div className="flex items-center gap-5 mb-6">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center flex-shrink-0">
+          <Coins className="w-8 h-8 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xl font-mono font-bold text-foreground leading-tight truncate">
+            {metadataLoading ? '...' : metadata?.name || shortMint}
+          </h3>
+          <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
+            {metadataLoading ? '...' : metadata?.symbol || 'TOKEN'}
+          </p>
+        </div>
+      </div>
+
+      {/* Token Details */}
+      <div className="space-y-3 mb-6">
+        <div className="flex items-center justify-between text-[10px] font-mono">
+          <span className="text-muted-foreground">MINT</span>
+          <div className="flex items-center gap-2 text-foreground">
+            {shortMint}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-4 w-4 p-0 hover:bg-transparent"
+              onClick={() => {
+                navigator.clipboard.writeText(mintStr);
+                toast.success('Mint address copied!');
+              }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Whitelisted: {addedDate}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="space-y-2">
+        <a 
+          href={`/listings?token=${mintStr}`}
+          className="text-[10px] font-mono text-primary hover:text-primary/80 uppercase tracking-widest flex items-center gap-2 mb-3"
+        >
+          View Pair Listings <span>→</span>
+        </a>
+        
+        {isAuthority && (
+          <div className="flex gap-2 pt-2 border-t border-border">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 text-muted-foreground hover:text-primary hover:border-primary/30 text-[10px]"
+              onClick={() => window.open(`https://solscan.io/token/${mintStr}?cluster=devnet`, '_blank')}
+            >
+              Solscan
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  disabled={adminLoading}
+                  className="text-[10px]"
+                >
+                  Remove
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove token from whitelist?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will prevent new listings using this token. Existing active listings will not be affected.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                    onClick={() => onRemove(token.mint)}
+                  >
+                    Remove Token
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminTokenWhitelistPage() {
   const { publicKey, connected } = useWallet();
@@ -73,7 +194,6 @@ export default function AdminTokenWhitelistPage() {
   };
 
   // Filter and sort tokens
-  console.log('Whitelisted tokens:', whitelisted);
   const filteredTokens = whitelisted
     .filter((token) => {
       if (!searchQuery) return true;
@@ -131,7 +251,7 @@ export default function AdminTokenWhitelistPage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Restricted Banner - Only show if NOT authority */}
       {!isAuthority && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-destructive/20 to-background px-6 py-2 border-b border-destructive/50 flex items-center justify-between">
+        <div className="fixed top-[73px] left-0 right-0 z-[60] bg-gradient-to-r from-destructive/20 to-background px-6 py-2 border-b border-destructive/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <svg className="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -144,11 +264,9 @@ export default function AdminTokenWhitelistPage() {
         </div>
       )}
 
-      <div className={isAuthority ? "pt-0" : "pt-10"}>
-        <Navigation />
-      </div>
+      <Navigation />
 
-      <main className={`pb-24 px-10 max-w-[1280px] mx-auto ${isAuthority ? "pt-32" : "pt-40"}`}>
+      <main className={`pb-24 px-10 max-w-[1280px] mx-auto ${isAuthority ? "pt-32" : "pt-36"}`}>
         {/* Header */}
         <header className="mb-10">
           <div className="flex items-center gap-4 mb-8">
@@ -227,128 +345,28 @@ export default function AdminTokenWhitelistPage() {
         {/* Token Grid */}
         {filteredTokens.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-gray-600 mb-4">
+            <div className="text-muted-foreground mb-4">
               <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
             </div>
-            <p className="text-[11px] font-mono text-gray-500 uppercase tracking-widest">
+            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
               {searchQuery ? 'No tokens found matching your search' : 'No tokens whitelisted yet'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTokens.map((token, index) => {
-              if (!token?.mint) {
-                console.log('Token missing mint:', token);
-                return null;
-              }
+            {filteredTokens.map((token) => {
+              if (!token?.mint) return null;
               
-              const mintStr = token.mint.toString();
-              const shortMint = `${mintStr.slice(0, 4)}...${mintStr.slice(-4)}`;
-              const addedDate = new Date(Number(token.updatedAt) * 1000).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              });
-
               return (
-                <div key={mintStr} className="bg-[#0A0A0A] border border-white/5 p-6 relative group hover:border-[#0CA5B0]/30 transition-all">
-                  {/* Approved Badge */}
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-primary/10 text-primary border-primary/40 text-[8px]">
-                      APPROVED
-                    </Badge>
-                  </div>
-
-                  {/* Token Header */}
-                  <div className="flex items-center gap-5 mb-6">
-                    <div className="w-16 h-16 rounded-full bg-[radial-gradient(circle_at_center,_rgba(12,165,176,0.2)_0%,_rgba(12,165,176,0.02)_100%)] border border-[#0CA5B0]/20 flex items-center justify-center font-mono text-2xl font-bold text-[#0CA5B0]">
-                      {mintStr.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-mono font-bold text-white leading-tight">{shortMint}</h3>
-                      <p className="text-[11px] font-mono text-gray-500 uppercase tracking-widest">Token Mint</p>
-                    </div>
-                  </div>
-
-                  {/* Token Details */}
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-gray-600">MINT</span>
-                      <div className="flex items-center gap-2 text-gray-400">
-                        {shortMint}
-                        <Button 
-                          variant="ghost" 
-                          size="icon-xs" 
-                          className="h-4 w-4"
-                          onClick={() => {
-                            navigator.clipboard.writeText(mintStr);
-                            toast.success('Mint address copied!');
-                          }}
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-gray-600">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                      Whitelisted: {addedDate}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="space-y-2">
-                    <a 
-                      href={`/listings?token=${mintStr}`}
-                      className="text-[10px] font-mono text-[#0CA5B0] hover:text-[#0CA5B0]/80 uppercase tracking-widest flex items-center gap-2 mb-3"
-                    >
-                      View Pair Listings <span>→</span>
-                    </a>
-                    
-                    {isAuthority && (
-                      <div className="flex gap-2 pt-2 border-t border-white/5">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1 text-gray-400 hover:text-[#0CA5B0] hover:border-[#0CA5B0]/30 text-[10px]"
-                          onClick={() => window.open(`https://solscan.io/token/${mintStr}`, '_blank')}
-                        >
-                          Solscan
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              disabled={adminLoading}
-                              className="text-[10px]"
-                            >
-                              Remove
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent size="sm">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove token from whitelist?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will prevent new listings using this token. Existing active listings will not be affected.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                className="bg-red-500 hover:bg-red-600 border-red-500 text-white"
-                                onClick={() => handleRemoveToken(token.mint)}
-                              >
-                                Remove Token
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <TokenCard
+                  key={token.mint.toString()}
+                  token={token}
+                  isAuthority={isAuthority}
+                  adminLoading={adminLoading}
+                  onRemove={handleRemoveToken}
+                />
               );
             })}
           </div>

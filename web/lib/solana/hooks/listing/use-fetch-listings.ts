@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
+import { useQuery } from '@tanstack/react-query';
 import { useProgram } from '../../use-program';
 
 export interface Listing {
@@ -27,40 +27,28 @@ export interface Listing {
 
 export function useFetchListings() {
   const { program } = useProgram();
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const fetchListings = async () => {
-    if (!program) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
+  const { data: listings, isLoading: loading, refetch } = useQuery({
+    queryKey: ['listings', program?.programId.toString()],
+    queryFn: async () => {
+      if (!program) return [];
+      
       const accounts = await program.account.listing.all();
       const listingsData = accounts.map((account) => ({
         publicKey: account.publicKey,
         ...account.account,
       })) as Listing[];
       
-      // Filter only active listings
       const activeListings = listingsData.filter(
         (listing) => listing.status.active !== undefined
       );
       
-      setListings(activeListings);
-    } catch (error) {
-      console.error('Error fetching listings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return activeListings;
+    },
+    enabled: !!program,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchListings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [program]);
-
-  return { listings, loading, refetch: fetchListings };
+  return { listings: listings ?? [], loading, refetch };
 }

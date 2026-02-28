@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
+import { useQuery } from '@tanstack/react-query';
 import { useProgram } from '../../use-program';
 import { getWhitelistPDA } from '@/lib/anchor/setup';
 
@@ -35,81 +35,58 @@ export interface WhitelistEntry {
 
 export function usePlatform() {
   const { program } = useProgram();
-  const [platform, setPlatform] = useState<PlatformConfig | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const fetchPlatform = async () => {
-    if (!program) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // We need to get all platform accounts since we don't know the authority
+  const { data: platform, isLoading: loading, refetch } = useQuery({
+    queryKey: ['platform', program?.programId.toString()],
+    queryFn: async () => {
+      if (!program) return null;
+      
       const accounts = await program.account.platform.all();
       if (accounts.length > 0) {
-        setPlatform(accounts[0].account as PlatformConfig);
-      } else {
-        setPlatform(null);
+        return accounts[0].account as PlatformConfig;
       }
-    } catch (error) {
-      console.error('Error fetching platform:', error);
-      setPlatform(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return null;
+    },
+    enabled: !!program,
+    staleTime: 30000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    fetchPlatform();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [program]);
-
-  return { platform, loading, refetch: fetchPlatform };
+  return { platform: platform ?? null, loading, refetch };
 }
 
 export function useWhitelist(tokenMint?: PublicKey) {
   const { program } = useProgram();
-  const [whitelist, setWhitelist] = useState<WhitelistEntry | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const fetchWhitelist = async () => {
-    if (!program || !tokenMint) {
-      setLoading(false);
-      return;
-    }
+  const { data: whitelist, isLoading: loading, refetch } = useQuery({
+    queryKey: ['whitelist', tokenMint?.toString()],
+    queryFn: async () => {
+      if (!program || !tokenMint) return null;
+      
+      try {
+        const [whitelistPda] = getWhitelistPDA(tokenMint);
+        const whitelistAccount = await program.account.tokenWhitelist.fetch(whitelistPda);
+        return whitelistAccount as WhitelistEntry;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!program && !!tokenMint,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
+  });
 
-    setLoading(true);
-    try {
-      const [whitelistPda] = getWhitelistPDA(tokenMint);
-      const whitelistAccount = await program.account.tokenWhitelist.fetch(whitelistPda);
-      setWhitelist(whitelistAccount as WhitelistEntry);
-    } catch {
-      // Entry doesn't exist
-      setWhitelist(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWhitelist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [program, tokenMint]);
-
-  return { whitelist, loading, refetch: fetchWhitelist };
+  return { whitelist: whitelist ?? null, loading, refetch };
 }
 
 export function useAllWhitelisted() {
   const { program } = useProgram();
-  const [whitelisted, setWhitelisted] = useState<WhitelistEntry[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const fetchAllWhitelisted = async () => {
-    if (!program) return;
-    
-    try {
+  const { data: whitelisted, isLoading: loading, refetch } = useQuery({
+    queryKey: ['whitelisted', program?.programId.toString()],
+    queryFn: async () => {
+      if (!program) return [];
+      
       const accounts = await program.account.tokenWhitelist.all();
       const entries = accounts
         .map((account) => ({
@@ -118,18 +95,12 @@ export function useAllWhitelisted() {
         }))
         .filter((entry) => entry.isWhitelisted) as WhitelistEntry[];
       
-      setWhitelisted(entries);
-    } catch (error) {
-      console.error('Error fetching whitelisted tokens:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return entries;
+    },
+    enabled: !!program,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchAllWhitelisted();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [program]);
-
-  return { whitelisted, loading, refetch: fetchAllWhitelisted };
+  return { whitelisted: whitelisted ?? [], loading, refetch };
 }
