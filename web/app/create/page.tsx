@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { Coins } from 'lucide-react';
 import Navigation from '@/components/layout/navigation';
 import StatusBar from '@/components/layout/status-bar';
 import WalletRequired from '@/components/wallet/wallet-required';
@@ -15,9 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateListing, useUserProfile, usePlatform, useAllWhitelisted } from '@/lib/solana/hooks';
+import { useCreateListing, useUserProfile, usePlatform, useAllWhitelisted, useTokensMetadata } from '@/lib/solana/hooks';
 import { toast } from 'sonner';
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { useConnection } from '@solana/wallet-adapter-react';
 
 const DURATIONS = [
@@ -35,12 +36,18 @@ export default function CreateListingPage() {
   const { createListing, loading: createLoading } = useCreateListing();
   const { platform, loading: platformLoading } = usePlatform();
   const { whitelisted, loading: whitelistLoading } = useAllWhitelisted();
+  
+  // Fetch metadata for all whitelisted tokens
+  const whitelistedMints = whitelisted.map(entry => entry.mint);
+  const { tokensMetadata, loading: metadataLoading } = useTokensMetadata(whitelistedMints);
 
   const [step] = useState(1);
   const [activeDuration, setActiveDuration] = useState('1 HR');
   const [customDuration, setCustomDuration] = useState('');
   const [slippage, setSlippage] = useState(1.0);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   // Form state
   const [sourceToken, setSourceToken] = useState('');
@@ -51,14 +58,22 @@ export default function CreateListingPage() {
   const [sourceBalance, setSourceBalance] = useState<number | null>(null);
   const [destBalance, setDestBalance] = useState<number | null>(null);
 
-  // Get available tokens from whitelist
-  const availableTokens = whitelisted
-    .filter((entry) => entry.mint) // Filter out any entries without mint
-    .map((entry) => ({
-      symbol: entry.mint.toString().slice(0, 4) + '...' + entry.mint.toString().slice(-4),
-      mint: entry.mint.toString(),
-      decimals: 9, // Default, should fetch from token metadata
-    }));
+  // Prevent hydration mismatch and wait for wallet state
+  useEffect(() => {
+    setMounted(true);
+    // Small delay to ensure wallet adapter has initialized
+    const timer = setTimeout(() => setIsReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Get available tokens from whitelist with metadata
+  const availableTokens = tokensMetadata.map((metadata) => ({
+    mint: metadata.mint,
+    symbol: metadata.symbol,
+    name: metadata.name,
+    image: metadata.image,
+    decimals: metadata.decimals,
+  }));
 
   // Set default tokens when whitelist loads
   useEffect(() => {
@@ -87,22 +102,41 @@ export default function CreateListingPage() {
     const fetchBalance = async () => {
       try {
         const tokenMint = new PublicKey(sourceToken);
-        const ata = getAssociatedTokenAddressSync(
-          tokenMint,
-          publicKey,
-          false,
-          TOKEN_2022_PROGRAM_ID
-        );
+        const tokenData = availableTokens.find(t => t.mint === sourceToken);
+        const decimals = tokenData?.decimals || 9;
         
-        const balance = await connection.getTokenAccountBalance(ata);
-        setSourceBalance(parseFloat(balance.value.uiAmount?.toString() || '0'));
-      } catch {
+        // Try standard token program first
+        try {
+          const ata = getAssociatedTokenAddressSync(
+            tokenMint,
+            publicKey,
+            false,
+            TOKEN_PROGRAM_ID
+          );
+          
+          const balance = await connection.getTokenAccountBalance(ata);
+          setSourceBalance(parseFloat(balance.value.amount) / Math.pow(10, decimals));
+          return;
+        } catch {
+          // If standard fails, try Token-2022
+          const ata = getAssociatedTokenAddressSync(
+            tokenMint,
+            publicKey,
+            false,
+            TOKEN_2022_PROGRAM_ID
+          );
+          
+          const balance = await connection.getTokenAccountBalance(ata);
+          setSourceBalance(parseFloat(balance.value.amount) / Math.pow(10, decimals));
+        }
+      } catch (error) {
+        console.log('Balance fetch error:', error);
         setSourceBalance(0);
       }
     };
 
     fetchBalance();
-  }, [publicKey, connection, sourceToken]);
+  }, [publicKey, connection, sourceToken, availableTokens]);
 
   useEffect(() => {
     if (!publicKey || !connection || !destToken) return;
@@ -110,22 +144,41 @@ export default function CreateListingPage() {
     const fetchBalance = async () => {
       try {
         const tokenMint = new PublicKey(destToken);
-        const ata = getAssociatedTokenAddressSync(
-          tokenMint,
-          publicKey,
-          false,
-          TOKEN_2022_PROGRAM_ID
-        );
+        const tokenData = availableTokens.find(t => t.mint === destToken);
+        const decimals = tokenData?.decimals || 9;
         
-        const balance = await connection.getTokenAccountBalance(ata);
-        setDestBalance(parseFloat(balance.value.uiAmount?.toString() || '0'));
-      } catch {
+        // Try standard token program first
+        try {
+          const ata = getAssociatedTokenAddressSync(
+            tokenMint,
+            publicKey,
+            false,
+            TOKEN_PROGRAM_ID
+          );
+          
+          const balance = await connection.getTokenAccountBalance(ata);
+          setDestBalance(parseFloat(balance.value.amount) / Math.pow(10, decimals));
+          return;
+        } catch {
+          // If standard fails, try Token-2022
+          const ata = getAssociatedTokenAddressSync(
+            tokenMint,
+            publicKey,
+            false,
+            TOKEN_2022_PROGRAM_ID
+          );
+          
+          const balance = await connection.getTokenAccountBalance(ata);
+          setDestBalance(parseFloat(balance.value.amount) / Math.pow(10, decimals));
+        }
+      } catch (error) {
+        console.log('Balance fetch error:', error);
         setDestBalance(0);
       }
     };
 
     fetchBalance();
-  }, [publicKey, connection, destToken]);
+  }, [publicKey, connection, destToken, availableTokens]);
 
   const getSelectedDuration = () => {
     if (customDuration) {
@@ -205,6 +258,19 @@ export default function CreateListingPage() {
   const selectedSourceToken = availableTokens.find(t => t.mint === sourceToken);
   const selectedDestToken = availableTokens.find(t => t.mint === destToken);
 
+  // Don't render until mounted and ready to prevent hydration mismatch and flash
+  if (!mounted || !isReady) {
+    return (
+      <div className="w-full min-h-screen bg-background text-foreground">
+        <Navigation />
+        <main className="pt-32 pb-24 px-6 max-w-[720px] mx-auto">
+          <div className="text-center text-muted-foreground">Loading...</div>
+        </main>
+        <StatusBar />
+      </div>
+    );
+  }
+
   // Show wallet connection prompt if not connected
   if (!connected) {
     return (
@@ -255,25 +321,8 @@ export default function CreateListingPage() {
     );
   }
 
-  if (!connected) {
-    return (
-      <div className="w-full min-h-screen bg-background text-foreground">
-        <Navigation />
-        <main className="pt-32 pb-24 px-6 max-w-[720px] mx-auto">
-          <WalletRequired
-            title="Connect Wallet to Create Listing"
-            description="You need to connect your Solana wallet to create a token swap listing on the platform."
-            backLink="/listings"
-            backLinkText="Back to Listings"
-          />
-        </main>
-        <StatusBar />
-      </div>
-    );
-  }
-
   // Show loading state
-  if (platformLoading || whitelistLoading) {
+  if (platformLoading || whitelistLoading || profileLoading || metadataLoading) {
     return (
       <div className="w-full min-h-screen bg-background text-foreground">
         <Navigation />
@@ -370,18 +419,60 @@ export default function CreateListingPage() {
                 <div className="flex justify-between">
                   <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">You Sell (Deposit)</label>
                   <span className="text-[10px] font-mono text-muted-foreground">
-                    Bal: {sourceBalance !== null ? (sourceBalance === 0 ? '0' : sourceBalance.toFixed(4)) : 'Loading...'} {selectedSourceToken?.symbol}
+                    Bal: {sourceBalance !== null ? (sourceBalance === 0 ? '0' : sourceBalance.toFixed(4)) : 'Loading...'} {availableTokens.find(t => t.mint === sourceToken)?.symbol || ''}
                   </span>
                 </div>
                 <div className="grid grid-cols-12 gap-3">
                   <div className="col-span-4 relative">
                     <Select value={sourceToken} onValueChange={setSourceToken}>
                       <SelectTrigger className="bg-muted border-border text-foreground h-auto p-4">
-                        <SelectValue />
+                        <SelectValue>
+                          {sourceToken && (() => {
+                            const token = availableTokens.find(t => t.mint === sourceToken);
+                            return token ? (
+                              <div className="flex items-center gap-2">
+                                {token.image ? (
+                                  <img 
+                                    src={token.image} 
+                                    alt={token.symbol} 
+                                    className="w-5 h-5 rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (fallback) fallback.style.display = 'block';
+                                    }}
+                                  />
+                                ) : null}
+                                <Coins className="w-4 h-4" style={{ display: token.image ? 'none' : 'block' }} />
+                                <span className="text-sm font-mono">{token.symbol}</span>
+                              </div>
+                            ) : null;
+                          })()}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {availableTokens.map(token => (
-                          <SelectItem key={token.mint} value={token.mint}>{token.symbol}</SelectItem>
+                          <SelectItem key={token.mint} value={token.mint}>
+                            <div className="flex items-center gap-2">
+                              {token.image ? (
+                                <img 
+                                  src={token.image} 
+                                  alt={token.symbol} 
+                                  className="w-4 h-4 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'block';
+                                  }}
+                                />
+                              ) : null}
+                              <Coins className="w-3 h-3" style={{ display: token.image ? 'none' : 'block' }} />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-mono font-semibold">{token.symbol}</span>
+                                <span className="text-[10px] text-muted-foreground">{token.name}</span>
+                              </div>
+                            </div>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -406,14 +497,14 @@ export default function CreateListingPage() {
                 {sourceBalance === 0 && (
                   <div className="p-3 bg-blue-500/5 border border-blue-500/20">
                     <p className="text-[10px] font-mono text-blue-400 leading-relaxed">
-                      You don&apos;t have any {selectedSourceToken?.symbol} tokens. You&apos;ll need to acquire some before creating a listing.
+                      You don&apos;t have any {availableTokens.find(t => t.mint === sourceToken)?.symbol || 'tokens'} at this address. You&apos;ll need to acquire some before creating a listing.
                     </p>
                   </div>
                 )}
                 {sourceBalance !== null && sourceBalance > 0 && parseFloat(sourceAmount || '0') > sourceBalance && (
                   <div className="p-3 bg-orange-500/5 border border-orange-500/20">
                     <p className="text-[10px] font-mono text-orange-500 leading-relaxed">
-                      Warning: Insufficient {selectedSourceToken?.symbol} balance (Required: {sourceAmount} + fees)
+                      Warning: Insufficient {availableTokens.find(t => t.mint === sourceToken)?.symbol || 'token'} balance (Required: {sourceAmount} + fees)
                     </p>
                   </div>
                 )}
@@ -438,18 +529,60 @@ export default function CreateListingPage() {
                 <div className="flex justify-between">
                   <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">You Receive</label>
                   <span className="text-[10px] font-mono text-muted-foreground">
-                    Bal: {destBalance !== null ? (destBalance === 0 ? '0' : destBalance.toFixed(4)) : 'Loading...'} {selectedDestToken?.symbol}
+                    Bal: {destBalance !== null ? (destBalance === 0 ? '0' : destBalance.toFixed(4)) : 'Loading...'} {availableTokens.find(t => t.mint === destToken)?.symbol || ''}
                   </span>
                 </div>
                 <div className="grid grid-cols-12 gap-3">
                   <div className="col-span-4 relative">
                     <Select value={destToken} onValueChange={setDestToken}>
                       <SelectTrigger className="bg-muted border-primary/40 text-foreground h-auto p-4">
-                        <SelectValue />
+                        <SelectValue>
+                          {destToken && (() => {
+                            const token = availableTokens.find(t => t.mint === destToken);
+                            return token ? (
+                              <div className="flex items-center gap-2">
+                                {token.image ? (
+                                  <img 
+                                    src={token.image} 
+                                    alt={token.symbol} 
+                                    className="w-5 h-5 rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (fallback) fallback.style.display = 'block';
+                                    }}
+                                  />
+                                ) : null}
+                                <Coins className="w-4 h-4" style={{ display: token.image ? 'none' : 'block' }} />
+                                <span className="text-sm font-mono">{token.symbol}</span>
+                              </div>
+                            ) : null;
+                          })()}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {availableTokens.map(token => (
-                          <SelectItem key={token.mint} value={token.mint}>{token.symbol}</SelectItem>
+                          <SelectItem key={token.mint} value={token.mint}>
+                            <div className="flex items-center gap-2">
+                              {token.image ? (
+                                <img 
+                                  src={token.image} 
+                                  alt={token.symbol} 
+                                  className="w-4 h-4 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'block';
+                                  }}
+                                />
+                              ) : null}
+                              <Coins className="w-3 h-3" style={{ display: token.image ? 'none' : 'block' }} />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-mono font-semibold">{token.symbol}</span>
+                                <span className="text-[10px] text-muted-foreground">{token.name}</span>
+                              </div>
+                            </div>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -481,9 +614,10 @@ export default function CreateListingPage() {
                   <div className="bg-muted border border-border p-3 focus-within:border-border">
                     <input
                       type="text"
-                      value={`${minFillAmount} ${sourceToken}`}
-                      onChange={(e) => setMinFillAmount(e.target.value.replace(` ${sourceToken}`, ''))}
+                      value={`${minFillAmount}`}
+                      onChange={(e) => setMinFillAmount(e.target.value)}
                       className="bg-transparent w-full font-mono text-sm outline-none"
+                      placeholder="0.00"
                     />
                   </div>
                 </div>
@@ -547,16 +681,16 @@ export default function CreateListingPage() {
               <div className="p-4 bg-primary/5 border border-primary/20 space-y-4">
                 <div className="flex items-center justify-between text-[10px] font-mono">
                   <span className="text-muted-foreground">Platform Fee ({platformFeeBps} bps)</span>
-                  <span className="text-foreground">{(parseFloat(sourceAmount || '0') * platformFeePercent / 100).toFixed(4)} {selectedSourceToken?.symbol}</span>
+                  <span className="text-foreground">{(parseFloat(sourceAmount || '0') * platformFeePercent / 100).toFixed(4)} {availableTokens.find(t => t.mint === sourceToken)?.symbol || ''}</span>
                 </div>
                 <div className="space-y-2 pt-4 border-t border-border">
                   <div className="flex justify-between text-[11px] font-mono">
                     <span className="text-muted-foreground">Initial Deposit</span>
-                    <span className="text-foreground">{sourceAmount || '0.00'} {selectedSourceToken?.symbol}</span>
+                    <span className="text-foreground">{sourceAmount || '0.00'} {availableTokens.find(t => t.mint === sourceToken)?.symbol || ''}</span>
                   </div>
                   <div className="flex justify-between text-[11px] font-mono">
                     <span className="text-muted-foreground">Expected Receive</span>
-                    <span className="text-foreground">{destAmount || '0.00'} {selectedDestToken?.symbol}</span>
+                    <span className="text-foreground">{destAmount || '0.00'} {availableTokens.find(t => t.mint === destToken)?.symbol || ''}</span>
                   </div>
                   <div className="flex justify-between text-[11px] font-mono">
                     <span className="text-muted-foreground">Expires In</span>
@@ -564,7 +698,7 @@ export default function CreateListingPage() {
                   </div>
                   <div className="flex justify-between text-[11px] font-mono font-bold pt-2">
                     <span className="text-foreground uppercase">Total Required</span>
-                    <span className="text-primary">{sourceAmount || '0.00'} {selectedSourceToken?.symbol} + 0.02 SOL</span>
+                    <span className="text-primary">{sourceAmount || '0.00'} {availableTokens.find(t => t.mint === sourceToken)?.symbol || ''} + 0.02 SOL</span>
                   </div>
                 </div>
               </div>

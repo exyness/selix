@@ -12,3 +12,6 @@ export * from './platform/use-platform';
 
 // User hooks
 export * from './user/use-user-profile';
+// Token hooks
+export * from './token/use-token-metadata';
+export * from './token/use-tokens-metadata';

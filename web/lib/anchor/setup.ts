@@ -53,8 +53,10 @@ export function getUserProfilePDA(user: PublicKey): [PublicKey, number] {
 }
 
 export function getListingPDA(maker: PublicKey, listingId: number): [PublicKey, number] {
+  // Create buffer and write u64 in little-endian format (browser-compatible)
   const idBuffer = Buffer.alloc(8);
-  idBuffer.writeBigUInt64LE(BigInt(listingId));
+  const view = new DataView(idBuffer.buffer, idBuffer.byteOffset, idBuffer.byteLength);
+  view.setBigUint64(0, BigInt(listingId), true); // true = little-endian
   
   return PublicKey.findProgramAddressSync(
     [SEEDS.LISTING, maker.toBuffer(), idBuffer],
@@ -62,11 +64,10 @@ export function getListingPDA(maker: PublicKey, listingId: number): [PublicKey, 
   );
 }
 
+// Note: Vault is an ATA, not a PDA. Use getAssociatedTokenAddressSync instead.
+// This function is deprecated - kept for backwards compatibility
 export function getVaultPDA(listing: PublicKey): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [listing.toBuffer()],
-    PROGRAM_ID
-  );
+  throw new Error('getVaultPDA is deprecated. Use getAssociatedTokenAddressSync(mint, listing, true, tokenProgram) instead');
 }
 
 export function getWhitelistPDA(mint: PublicKey): [PublicKey, number] {

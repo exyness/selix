@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { useProgram } from '../../use-program';
-import { getUserProfilePDA, getVaultPDA } from '@/lib/anchor/setup';
+import { getUserProfilePDA } from '@/lib/anchor/setup';
 import { toast } from 'sonner';
 
 export function useCancelListing() {
@@ -20,13 +20,27 @@ export function useCancelListing() {
     setLoading(true);
     try {
       const [makerProfile] = getUserProfilePDA(wallet.publicKey);
-      const [vault] = getVaultPDA(listing);
       
+      // Determine token program and calculate vault ATA
+      let tokenProgram = TOKEN_PROGRAM_ID;
       const makerAta = getAssociatedTokenAddressSync(
         offeredMint,
         wallet.publicKey,
         false,
-        TOKEN_2022_PROGRAM_ID
+        TOKEN_PROGRAM_ID
+      );
+      
+      // Check if using Token-2022
+      const accountInfo = await program.provider.connection.getAccountInfo(makerAta);
+      if (!accountInfo) {
+        tokenProgram = TOKEN_2022_PROGRAM_ID;
+      }
+      
+      const vault = getAssociatedTokenAddressSync(
+        offeredMint,
+        listing,
+        true, // allowOwnerOffCurve for PDA
+        tokenProgram
       );
 
       const tx = await program.methods

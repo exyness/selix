@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { useProgram } from '../../use-program';
-import { getUserProfilePDA, getVaultPDA, getPlatformPDA } from '@/lib/anchor/setup';
+import { getUserProfilePDA, getPlatformPDA } from '@/lib/anchor/setup';
 import { toast } from 'sonner';
 
 export interface ExecuteSwapParams {
@@ -31,7 +31,26 @@ export function useExecuteSwap() {
       const [takerProfile] = getUserProfilePDA(wallet.publicKey);
       const [makerProfile] = getUserProfilePDA(params.maker);
       const [platform] = getPlatformPDA();
-      const [vault] = getVaultPDA(params.listing);
+      
+      // Determine token program
+      let tokenProgram = TOKEN_PROGRAM_ID;
+      const testAta = getAssociatedTokenAddressSync(
+        params.offeredMint,
+        wallet.publicKey,
+        false,
+        TOKEN_PROGRAM_ID
+      );
+      const accountInfo = await program.provider.connection.getAccountInfo(testAta);
+      if (!accountInfo) {
+        tokenProgram = TOKEN_2022_PROGRAM_ID;
+      }
+      
+      const vault = getAssociatedTokenAddressSync(
+        params.offeredMint,
+        params.listing,
+        true, // allowOwnerOffCurve for PDA
+        tokenProgram
+      );
       
       const takerOfferedAta = getAssociatedTokenAddressSync(
         params.requestedMint,
