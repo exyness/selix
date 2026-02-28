@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useProgram } from '../../use-program';
 import { getUserProfilePDA } from '@/lib/anchor/setup';
 import { toast } from 'sonner';
+import { BN } from '@coral-xyz/anchor';
 
 export interface UserProfile {
   user: string;
@@ -52,10 +53,15 @@ export function useUserProfile() {
       const [profilePda] = getUserProfilePDA(wallet.publicKey);
       
       const tx = await program.methods
-        .initializeUser()
+        .initializeUser({
+          referrer: null,
+          defaultListingDuration: new BN(3600), // 1 hour default
+          defaultSlippageBps: 100, // 1% default
+        })
         .accounts({
           user: wallet.publicKey,
           userProfile: profilePda,
+          referrer: null,
         })
         .rpc();
 

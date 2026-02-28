@@ -29,10 +29,14 @@ export const SEEDS = {
 
 // Derive PDAs
 export function getPlatformPDA(authority?: PublicKey): [PublicKey, number] {
-  // If no authority provided, we can't derive the PDA
-  // This should be called with the authority wallet
+  // If no authority provided, fetch from all accounts
+  // For now, we'll use a placeholder that will be replaced when fetching
   if (!authority) {
-    throw new Error('Authority public key required to derive platform PDA');
+    // Return a dummy PDA - caller should use program.account.platform.all() instead
+    return PublicKey.findProgramAddressSync(
+      [SEEDS.PLATFORM],
+      PROGRAM_ID
+    );
   }
   
   return PublicKey.findProgramAddressSync(

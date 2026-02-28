@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { useProgram } from '../../use-program';
-import { getPlatformPDA, getWhitelistPDA } from '@/lib/anchor/setup';
+import { getWhitelistPDA } from '@/lib/anchor/setup';
 
 export interface PlatformConfig {
   authority: PublicKey;
@@ -26,9 +26,10 @@ export interface PlatformConfig {
 }
 
 export interface WhitelistEntry {
-  tokenMint: PublicKey;
+  publicKey?: PublicKey;
+  mint: PublicKey;
   isWhitelisted: boolean;
-  addedAt: BN;
+  updatedAt: BN;
   bump: number;
 }
 
@@ -87,7 +88,7 @@ export function useWhitelist(tokenMint?: PublicKey) {
         const [whitelistPda] = getWhitelistPDA(tokenMint);
         const whitelistAccount = await program.account.tokenWhitelist.fetch(whitelistPda);
         setWhitelist(whitelistAccount as WhitelistEntry);
-      } catch (error) {
+      } catch {
         // Entry doesn't exist
         setWhitelist(null);
       } finally {
@@ -116,7 +117,7 @@ export function useAllWhitelisted() {
           publicKey: account.publicKey,
           ...account.account,
         }))
-        .filter((entry: any) => entry.isWhitelisted) as WhitelistEntry[];
+        .filter((entry) => entry.isWhitelisted) as WhitelistEntry[];
       
       setWhitelisted(entries);
     } catch (error) {
@@ -132,6 +133,7 @@ export function useAllWhitelisted() {
     // Poll every 30 seconds
     const interval = setInterval(fetchAllWhitelisted, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program]);
 
   return { whitelisted, loading, refetch: fetchAllWhitelisted };
