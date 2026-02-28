@@ -1,47 +1,105 @@
 'use client';
 
+import { usePlatform } from '@/lib/solana/hooks';
 import Navigation from '@/components/layout/navigation';
 import StatusBar from '@/components/layout/status-bar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+
+// Mock data for charts
+const volumeData = [
+  { date: 'Nov 18', volume: 180 },
+  { date: 'Nov 19', volume: 150 },
+  { date: 'Nov 20', volume: 170 },
+  { date: 'Nov 21', volume: 90 },
+  { date: 'Nov 22', volume: 120 },
+  { date: 'Nov 23', volume: 200 },
+  { date: 'Nov 24', volume: 160 },
+];
+
+const swapsData = [
+  { day: 'Mon', swaps: 1200 },
+  { day: 'Tue', swaps: 1650 },
+  { day: 'Wed', swaps: 1350 },
+  { day: 'Thu', swaps: 2100 },
+  { day: 'Fri', swaps: 2550 },
+  { day: 'Sat', swaps: 2850 },
+  { day: 'Sun', swaps: 2250 },
+];
+
+const listingsTrendData = Array.from({ length: 30 }, (_, i) => ({
+  day: i + 1,
+  listings: Math.floor(800 + Math.random() * 400 + i * 10),
+}));
 
 export default function PlatformStatisticsPage() {
+  const { platform, loading } = usePlatform();
+
   return (
-    <div className="min-h-screen bg-[#050505] text-[#EAEAEA]">
+    <div className="min-h-screen bg-background text-foreground">
       <Navigation />
 
       <main className="pt-28 pb-20 px-10 max-w-[1280px] mx-auto">
         {/* Header */}
         <header className="mb-10 flex items-end justify-between">
           <div>
-            <div className="text-[10px] font-mono text-[#0CA5B0] tracking-[0.3em] uppercase mb-2">
-              {"/// Platform Analytics"}
+            <div className="text-[10px] font-mono text-primary tracking-[0.3em] uppercase mb-2">
+              {'/// Platform Analytics'}
             </div>
-            <h1 className="text-4xl font-mono font-bold tracking-tight text-white uppercase">
+            <h1 className="text-4xl font-mono font-bold tracking-tight text-foreground uppercase">
               Statistics
             </h1>
           </div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#0CA5B0] animate-pulse" />
-            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Updated 12s ago</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Live Data</span>
           </div>
         </header>
 
         {/* Top Stats Grid */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           {[
-            { label: 'Total Listings Created', value: '84,201', highlight: false },
-            { label: 'Total Swaps Executed', value: '12.4M', highlight: true },
-            { label: 'Total Volume Traded', value: '$1.2B', highlight: false },
-            { label: 'Total Fees Collected', value: '$240K', highlight: false },
+            { 
+              label: 'Total Listings Created', 
+              value: loading ? '...' : platform ? platform.totalListingsCreated.toString() : '0',
+              highlight: false 
+            },
+            { 
+              label: 'Total Swaps Executed', 
+              value: loading ? '...' : platform ? platform.totalSwapsExecuted.toString() : '0',
+              highlight: true 
+            },
+            { 
+              label: 'Total Volume Traded', 
+              value: loading ? '...' : platform ? `${(Number(platform.totalVolumeTraded) / 1e9).toFixed(2)} SOL` : '0 SOL',
+              highlight: false 
+            },
+            { 
+              label: 'Total Fees Collected', 
+              value: loading ? '...' : platform ? `${(Number(platform.totalFeesCollected) / 1e9).toFixed(4)} SOL` : '0 SOL',
+              highlight: false 
+            },
           ].map((stat) => (
             <Card key={stat.label}>
               <CardContent className="pt-6">
-                <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-4">
+                <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-4">
                   {stat.label}
                 </div>
-                <div className={`text-3xl font-mono font-bold ${stat.highlight ? 'text-[#0CA5B0]' : 'text-white'}`}>
+                <div className={`text-3xl font-mono font-bold ${stat.highlight ? 'text-primary' : 'text-foreground'}`}>
                   {stat.value}
                 </div>
               </CardContent>
@@ -54,61 +112,89 @@ export default function PlatformStatisticsPage() {
           {/* Volume Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+              <CardTitle className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                 Volume Over Time (7D)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-40 relative flex items-end gap-1 px-2">
-                <div className="absolute inset-0 flex flex-col justify-between py-2 border-l border-white/5">
-                  <span className="text-[8px] font-mono text-gray-600 pl-2">$250M</span>
-                  <span className="text-[8px] font-mono text-gray-600 pl-2">$125M</span>
-                  <span className="text-[8px] font-mono text-gray-600 pl-2">$0</span>
-                </div>
-                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={volumeData}>
                   <defs>
-                    <linearGradient id="chart-grad" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#0CA5B0" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#0CA5B0" stopOpacity="0" />
+                    <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0CA5B0" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#0CA5B0" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <path d="M0,80 L20,60 L40,70 L60,30 L80,45 L100,20 L100,100 L0,100 Z" fill="url(#chart-grad)" />
-                  <path d="M0,80 L20,60 L40,70 L60,30 L80,45 L100,20" fill="none" stroke="#0CA5B0" strokeWidth="2" />
-                </svg>
-              </div>
-              <div className="flex justify-between mt-4 px-2 text-[9px] font-mono text-gray-600">
-                <span>NOV 18</span><span>NOV 20</span><span>NOV 22</span><span>NOV 24</span>
-              </div>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#666" 
+                    style={{ fontSize: '10px', fontFamily: 'monospace' }}
+                  />
+                  <YAxis 
+                    stroke="#666" 
+                    style={{ fontSize: '10px', fontFamily: 'monospace' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#0A0A0A', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '4px',
+                      fontFamily: 'monospace',
+                      fontSize: '11px'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="volume" 
+                    stroke="#0CA5B0" 
+                    strokeWidth={2}
+                    fill="url(#colorVolume)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
 
           {/* Bar Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+              <CardTitle className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                 Swaps Per Day
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-40 flex items-end justify-between gap-3">
-                {[40, 55, 45, 70, 85, 95, 75].map((h, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 bg-[#0CA5B0] transition-all"
-                    style={{ height: `${h}%`, opacity: 0.2 + (i * 0.12) }}
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={swapsData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis 
+                    dataKey="day" 
+                    stroke="#666" 
+                    style={{ fontSize: '10px', fontFamily: 'monospace' }}
                   />
-                ))}
-              </div>
-              <div className="flex justify-between mt-4 text-[9px] font-mono text-gray-600">
-                <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
-              </div>
+                  <YAxis 
+                    stroke="#666" 
+                    style={{ fontSize: '10px', fontFamily: 'monospace' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#0A0A0A', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '4px',
+                      fontFamily: 'monospace',
+                      fontSize: '11px'
+                    }}
+                  />
+                  <Bar dataKey="swaps" fill="#0CA5B0" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
 
           {/* Top Token Pairs */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+              <CardTitle className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                 Top Token Pairs
               </CardTitle>
             </CardHeader>
@@ -121,11 +207,11 @@ export default function PlatformStatisticsPage() {
               ].map((item) => (
                 <div key={item.pair}>
                   <div className="flex justify-between text-[9px] font-mono mb-1.5">
-                    <span className="text-white">{item.pair}</span>
-                    <span className="text-gray-500">{item.percent}%</span>
+                    <span className="text-foreground">{item.pair}</span>
+                    <span className="text-muted-foreground">{item.percent}%</span>
                   </div>
-                  <div className="h-1 bg-white/5">
-                    <div className="h-full bg-[#0CA5B0]" style={{ width: `${item.percent}%` }} />
+                  <div className="h-1 bg-muted">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${item.percent}%` }} />
                   </div>
                 </div>
               ))}
@@ -135,20 +221,42 @@ export default function PlatformStatisticsPage() {
           {/* Active Listings Trend */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+              <CardTitle className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                 Active Listings Trend (30D)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-40 relative">
-                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <path d="M0,80 C10,75 20,85 30,70 C40,65 50,55 60,60 C70,65 80,45 90,40 C95,38 100,35 100,35 L100,100 L0,100 Z" fill="rgba(255,255,255,0.05)" />
-                  <path d="M0,80 C10,75 20,85 30,70 C40,65 50,55 60,60 C70,65 80,45 90,40 C95,38 100,35 100,35" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-                </svg>
-              </div>
-              <div className="mt-4 flex justify-between text-[8px] font-mono text-gray-600">
-                <span>30 DAYS AGO</span><span>TODAY</span>
-              </div>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={listingsTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis 
+                    dataKey="day" 
+                    stroke="#666" 
+                    style={{ fontSize: '10px', fontFamily: 'monospace' }}
+                    ticks={[1, 10, 20, 30]}
+                  />
+                  <YAxis 
+                    stroke="#666" 
+                    style={{ fontSize: '10px', fontFamily: 'monospace' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#0A0A0A', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '4px',
+                      fontFamily: 'monospace',
+                      fontSize: '11px'
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="listings" 
+                    stroke="rgba(255,255,255,0.3)" 
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </section>
@@ -183,16 +291,16 @@ export default function PlatformStatisticsPage() {
           ].map((board) => (
             <Card key={board.title}>
               <CardHeader>
-                <CardTitle className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+                <CardTitle className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                   {board.title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
                 {board.rows.map((row) => (
-                  <div key={row.label} className="flex items-center justify-between p-3 hover:bg-white/5 transition-colors">
-                    {row.rank && <span className="text-[11px] font-mono text-[#0CA5B0] w-8">{row.rank}</span>}
-                    <span className="text-[11px] font-mono text-white flex-1">{row.label}</span>
-                    <span className="text-[11px] font-mono text-gray-400">{row.value}</span>
+                  <div key={row.label} className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors">
+                    {row.rank && <span className="text-[11px] font-mono text-primary w-8">{row.rank}</span>}
+                    <span className="text-[11px] font-mono text-foreground flex-1">{row.label}</span>
+                    <span className="text-[11px] font-mono text-muted-foreground">{row.value}</span>
                   </div>
                 ))}
               </CardContent>
@@ -203,18 +311,18 @@ export default function PlatformStatisticsPage() {
         <Separator className="mb-10" />
 
         {/* Bottom Stats */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-[#0A0A0A] border border-white/5 p-8">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-card border border-border p-8">
           <div>
-            <div className="text-[9px] font-mono text-gray-600 uppercase tracking-widest mb-2">Active Listings</div>
-            <div className="text-xl font-mono text-[#0CA5B0]">1,204</div>
+            <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Active Listings</div>
+            <div className="text-xl font-mono text-primary">1,204</div>
           </div>
           <div>
-            <div className="text-[9px] font-mono text-gray-600 uppercase tracking-widest mb-2">Avg Listing Duration</div>
-            <div className="text-xl font-mono text-white">6.2 HRS</div>
+            <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Avg Listing Duration</div>
+            <div className="text-xl font-mono text-foreground">6.2 HRS</div>
           </div>
           <div>
-            <div className="text-[9px] font-mono text-gray-600 uppercase tracking-widest mb-2">Avg Fill Rate</div>
-            <div className="text-xl font-mono text-white">78.4%</div>
+            <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Avg Fill Rate</div>
+            <div className="text-xl font-mono text-foreground">78.4%</div>
           </div>
           <div className="flex items-center justify-end">
             <Badge className="gap-2 bg-green-500/10 text-green-500 border-green-500/20 px-3 py-1 text-[10px]">
