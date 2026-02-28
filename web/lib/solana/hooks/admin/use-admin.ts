@@ -16,9 +16,9 @@ export function useAdmin() {
     feeCollector: PublicKey;
     feeBasisPoints: number;
     maxListingsPerUser: number;
-    minTradeDuration: number;
-    maxTradeDuration: number;
-    whitelistEnabled: boolean;
+    minListingDuration: number;
+    maxListingDuration: number;
+    minTradeAmount: number;
   }) => {
     if (!program || !wallet.publicKey) {
       toast.error('Please connect your wallet');
@@ -31,12 +31,11 @@ export function useAdmin() {
 
       const tx = await program.methods
         .initializePlatform({
-          feeCollector: params.feeCollector,
           feeBasisPoints: params.feeBasisPoints,
+          minListingDuration: new BN(params.minListingDuration),
+          maxListingDuration: new BN(params.maxListingDuration),
+          minTradeAmount: new BN(params.minTradeAmount),
           maxListingsPerUser: params.maxListingsPerUser,
-          minTradeDuration: new BN(params.minTradeDuration),
-          maxTradeDuration: new BN(params.maxTradeDuration),
-          whitelistEnabled: params.whitelistEnabled,
         })
         .accounts({
           authority: wallet.publicKey,

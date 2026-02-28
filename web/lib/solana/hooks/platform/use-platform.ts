@@ -10,15 +10,18 @@ export interface PlatformConfig {
   authority: PublicKey;
   feeCollector: PublicKey;
   feeBasisPoints: number;
+  minListingDuration: BN;
+  maxListingDuration: BN;
+  minTradeAmount: BN;
   maxListingsPerUser: number;
-  minTradeDuration: BN;
-  maxTradeDuration: BN;
+  isPaused: boolean;
   whitelistEnabled: boolean;
-  paused: boolean;
-  totalListings: BN;
-  totalSwaps: BN;
-  totalVolume: BN;
-  feesCollected: BN;
+  totalListingsCreated: BN;
+  totalSwapsExecuted: BN;
+  totalVolumeTraded: BN;
+  totalFeesCollected: BN;
+  createdAt: BN;
+  updatedAt: BN;
   bump: number;
 }
 

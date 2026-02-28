@@ -14,8 +14,9 @@ interface SolanaProviderProps {
 }
 
 export function SolanaProvider({ children }: SolanaProviderProps) {
-  // Use devnet for development, change to mainnet-beta for production
-  const endpoint = useMemo(() => clusterApiUrl('devnet'), []);
+  // Use localnet for local development
+  // Change to clusterApiUrl('devnet') for devnet or clusterApiUrl('mainnet-beta') for production
+  const endpoint = useMemo(() => 'http://localhost:8899', []);
 
   const wallets = useMemo(
     () => [

@@ -18,21 +18,6 @@ export default function Navigation() {
   const isAuthority = connected && publicKey && platform && 
     publicKey.toString() === platform.authority.toString();
 
-  // Debug logging
-  useEffect(() => {
-    if (connected && publicKey) {
-      console.log('🔑 Connected Wallet:', publicKey.toString());
-      console.log('📊 Platform Loading:', loading);
-      console.log('🏛️ Platform Data:', platform);
-      if (platform) {
-        console.log('👑 Platform Authority:', platform.authority.toString());
-        console.log('✅ Is Authority:', isAuthority);
-      } else {
-        console.log('⚠️ Platform not initialized yet');
-      }
-    }
-  }, [connected, publicKey, platform, loading, isAuthority]);
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-5 bg-background/90 backdrop-blur-md border-b border-border">
       <Link href="/" className="flex items-center gap-2.5">
