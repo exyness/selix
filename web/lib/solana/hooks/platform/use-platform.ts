@@ -38,9 +38,13 @@ export function usePlatform() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!program) return;
+    if (!program) {
+      setLoading(false);
+      return;
+    }
 
     const fetchPlatform = async () => {
+      setLoading(true);
       try {
         // We need to get all platform accounts since we don't know the authority
         const accounts = await program.account.platform.all();
@@ -102,27 +106,27 @@ export function useAllWhitelisted() {
   const [whitelisted, setWhitelisted] = useState<WhitelistEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchAllWhitelisted = async () => {
     if (!program) return;
+    
+    try {
+      const accounts = await program.account.tokenWhitelist.all();
+      const entries = accounts
+        .map((account) => ({
+          publicKey: account.publicKey,
+          ...account.account,
+        }))
+        .filter((entry: any) => entry.isWhitelisted) as WhitelistEntry[];
+      
+      setWhitelisted(entries);
+    } catch (error) {
+      console.error('Error fetching whitelisted tokens:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchAllWhitelisted = async () => {
-      try {
-        const accounts = await program.account.tokenWhitelist.all();
-        const entries = accounts
-          .map((account) => ({
-            publicKey: account.publicKey,
-            ...account.account,
-          }))
-          .filter((entry: any) => entry.isWhitelisted) as WhitelistEntry[];
-        
-        setWhitelisted(entries);
-      } catch (error) {
-        console.error('Error fetching whitelisted tokens:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchAllWhitelisted();
     
     // Poll every 30 seconds
@@ -130,5 +134,5 @@ export function useAllWhitelisted() {
     return () => clearInterval(interval);
   }, [program]);
 
-  return { whitelisted, loading };
+  return { whitelisted, loading, refetch: fetchAllWhitelisted };
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import { createContext, useContext, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useMemo, ReactNode, useCallback } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { clusterApiUrl } from '@solana/web3.js';
+import { WalletError } from '@solana/wallet-adapter-base';
+import { toast } from 'sonner';
 
 // Import wallet adapter CSS
 import '@solana/wallet-adapter-react-ui/styles.css';
@@ -26,12 +26,20 @@ export function SolanaProvider({ children }: SolanaProviderProps) {
     []
   );
 
+  const onError = useCallback((error: WalletError) => {
+    console.error('Wallet error:', error);
+    toast.error(error.message || 'Wallet connection failed');
+  }, []);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          {children}
-        </WalletModalProvider>
+      <WalletProvider 
+        wallets={wallets} 
+        autoConnect={true}
+        onError={onError}
+        localStorageKey="selix-wallet"
+      >
+        {children}
       </WalletProvider>
     </ConnectionProvider>
   );

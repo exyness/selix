@@ -91,8 +91,8 @@ export function useAdmin() {
   const updateConfig = async (params: {
     feeBasisPoints?: number;
     maxListingsPerUser?: number;
-    minTradeDuration?: number;
-    maxTradeDuration?: number;
+    minListingDuration?: number;
+    maxListingDuration?: number;
     whitelistEnabled?: boolean;
   }) => {
     if (!program || !wallet.publicKey) {
@@ -108,8 +108,9 @@ export function useAdmin() {
         .updateConfig({
           feeBasisPoints: params.feeBasisPoints ?? null,
           maxListingsPerUser: params.maxListingsPerUser ?? null,
-          minTradeDuration: params.minTradeDuration ? new BN(params.minTradeDuration) : null,
-          maxTradeDuration: params.maxTradeDuration ? new BN(params.maxTradeDuration) : null,
+          minListingDuration: params.minListingDuration ? new BN(params.minListingDuration) : null,
+          maxListingDuration: params.maxListingDuration ? new BN(params.maxListingDuration) : null,
+          minTradeAmount: null,
           whitelistEnabled: params.whitelistEnabled ?? null,
         })
         .accounts({

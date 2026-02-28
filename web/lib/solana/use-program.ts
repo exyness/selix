@@ -10,8 +10,7 @@ export function useProgram() {
   const wallet = useWallet();
 
   const provider = useMemo(() => {
-    if (!wallet.publicKey) return null;
-    
+    // Create a read-only provider even without a wallet
     return new AnchorProvider(
       connection,
       wallet as any,

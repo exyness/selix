@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SolanaProvider } from "@/lib/solana/provider";
+import { QueryProvider } from "@/lib/providers/query-provider";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -34,10 +35,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SolanaProvider>
-            {children}
-            <Toaster position="bottom-right" />
-          </SolanaProvider>
+          <QueryProvider>
+            <SolanaProvider>
+              {children}
+              <Toaster position="bottom-right" />
+            </SolanaProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

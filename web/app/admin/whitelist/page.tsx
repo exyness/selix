@@ -28,10 +28,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAllWhitelisted, usePlatform, useAdmin } from '@/lib/solana/hooks';
 import { toast } from 'sonner';
+import WalletRequired from '@/components/wallet/wallet-required';
 
 export default function AdminTokenWhitelistPage() {
   const { publicKey, connected } = useWallet();
-  const { whitelisted, loading } = useAllWhitelisted();
+  const { whitelisted, loading, refetch } = useAllWhitelisted();
   const { platform } = usePlatform();
   const { manageWhitelist, loading: adminLoading } = useAdmin();
   
@@ -56,8 +57,9 @@ export default function AdminTokenWhitelistPage() {
       if (result) {
         setNewTokenMint('');
         setShowAddDialog(false);
+        refetch();
       }
-    } catch (error) {
+    } catch {
       toast.error('Invalid public key');
     }
   };
@@ -66,38 +68,40 @@ export default function AdminTokenWhitelistPage() {
     const result = await manageWhitelist(tokenMint, false);
     if (result) {
       toast.success('Token removed from whitelist');
+      refetch();
     }
   };
 
   // Filter and sort tokens
+  console.log('Whitelisted tokens:', whitelisted);
   const filteredTokens = whitelisted
     .filter((token) => {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
-      return token.tokenMint.toString().toLowerCase().includes(query);
+      return token.mint.toString().toLowerCase().includes(query);
     })
     .sort((a, b) => {
       switch (sortBy) {
         case 'newest':
-          return Number(b.addedAt) - Number(a.addedAt);
+          return Number(b.updatedAt) - Number(a.updatedAt);
         case 'oldest':
-          return Number(a.addedAt) - Number(b.addedAt);
+          return Number(a.updatedAt) - Number(b.updatedAt);
         case 'a-z':
-          return a.tokenMint.toString().localeCompare(b.tokenMint.toString());
+          return a.mint.toString().localeCompare(b.mint.toString());
         case 'z-a':
-          return b.tokenMint.toString().localeCompare(a.tokenMint.toString());
+          return b.mint.toString().localeCompare(a.mint.toString());
         default:
           return 0;
       }
     });
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] text-[#EAEAEA]">
+      <div className="min-h-screen bg-background text-foreground">
         <Navigation />
         <main className="pt-32 pb-24 px-10 max-w-[1280px] mx-auto">
           <div className="text-center py-12">
-            <div className="inline-block w-8 h-8 border-2 border-[#0CA5B0] border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-[11px] font-mono text-gray-500 uppercase tracking-widest">Loading whitelist...</p>
+            <div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Loading whitelist...</p>
           </div>
         </main>
         <StatusBar />
@@ -105,31 +109,51 @@ export default function AdminTokenWhitelistPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#050505] text-[#EAEAEA]">
-      {/* Restricted Banner */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-red-900 to-[#050505] px-6 py-2 border-b border-red-900/50 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span className="text-[10px] font-mono font-bold text-red-200 tracking-[0.2em] uppercase">
-            ACCESS RESTRICTED — Authority wallet required for whitelist management
-          </span>
-        </div>
-        <span className="text-[9px] font-mono text-red-400/60 uppercase">Security Protocol Level 4</span>
+  // Show wallet connection prompt if not connected
+  if (!connected) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Navigation />
+        <main className="pt-32 pb-24 px-10 max-w-[1280px] mx-auto">
+          <WalletRequired 
+            title="Wallet Required"
+            description="Please connect your Solana wallet to view the token whitelist."
+            backLink="/admin"
+            backLinkText="← Back to Admin"
+          />
+        </main>
+        <StatusBar />
       </div>
+    );
+  }
 
-      <div className="pt-10">
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Restricted Banner - Only show if NOT authority */}
+      {!isAuthority && (
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-destructive/20 to-background px-6 py-2 border-b border-destructive/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <svg className="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span className="text-[10px] font-mono font-bold text-destructive tracking-[0.2em] uppercase">
+              ACCESS RESTRICTED — Authority wallet required for whitelist management
+            </span>
+          </div>
+          <span className="text-[9px] font-mono text-muted-foreground uppercase">Security Protocol Level 4</span>
+        </div>
+      )}
+
+      <div className={isAuthority ? "pt-0" : "pt-10"}>
         <Navigation />
       </div>
 
-      <main className="pt-40 pb-24 px-10 max-w-[1280px] mx-auto">
+      <main className={`pb-24 px-10 max-w-[1280px] mx-auto ${isAuthority ? "pt-32" : "pt-40"}`}>
         {/* Header */}
         <header className="mb-10">
           <div className="flex items-center gap-4 mb-8">
             <Link href="/admin">
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                 </svg>
@@ -137,14 +161,14 @@ export default function AdminTokenWhitelistPage() {
             </Link>
             <div className="flex-1 flex items-end justify-between">
               <div>
-                <div className="text-[10px] font-mono text-[#0CA5B0] tracking-[0.3em] uppercase mb-2">
-                  /// Admin Panel — Token Management
+                <div className="text-[10px] font-mono text-primary tracking-[0.3em] uppercase mb-2">
+                  {'/// Admin Panel — Token Management'}
                 </div>
-                <h1 className="text-4xl font-mono font-bold tracking-tight text-white uppercase">
+                <h1 className="text-4xl font-mono font-bold tracking-tight text-foreground uppercase">
                   Manage Whitelist
                 </h1>
               </div>
-              <Badge variant="outline" className="text-[#0CA5B0] border-[#0CA5B0]/30 px-4 py-1.5">
+              <Badge variant="outline" className="text-primary border-primary/30 px-4 py-1.5">
                 {filteredTokens.length} TOKENS APPROVED
               </Badge>
             </div>
@@ -153,20 +177,20 @@ export default function AdminTokenWhitelistPage() {
           {/* Search & Sort */}
           <div className="flex gap-4 items-center">
             <div className="flex-1 relative">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <Input
                 placeholder="Search by mint address..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 bg-[#0A0A0A] border-white/10 h-12"
+                className="pl-12 bg-card border-border h-12"
               />
             </div>
             <Button 
               onClick={() => setShowAddDialog(true)}
               disabled={!isAuthority || adminLoading}
-              className="bg-[#0CA5B0] text-black border-[#0CA5B0] font-bold h-12" 
+              className="bg-primary text-primary-foreground border-primary font-bold h-12" 
               size="default"
             >
               + Add Token
@@ -175,7 +199,7 @@ export default function AdminTokenWhitelistPage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="default" className="h-12 gap-3">
                   Sort: {sortBy === 'newest' ? 'Newest' : sortBy === 'oldest' ? 'Oldest' : sortBy === 'a-z' ? 'A–Z' : 'Z–A'}
-                  <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -202,10 +226,15 @@ export default function AdminTokenWhitelistPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTokens.map((token) => {
-              const mintStr = token.tokenMint.toString();
+            {filteredTokens.map((token, index) => {
+              if (!token?.mint) {
+                console.log('Token missing mint:', token);
+                return null;
+              }
+              
+              const mintStr = token.mint.toString();
               const shortMint = `${mintStr.slice(0, 4)}...${mintStr.slice(-4)}`;
-              const addedDate = new Date(Number(token.addedAt) * 1000).toLocaleDateString('en-US', {
+              const addedDate = new Date(Number(token.updatedAt) * 1000).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric'
@@ -257,43 +286,55 @@ export default function AdminTokenWhitelistPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1 text-gray-400 hover:text-[#0CA5B0] hover:border-[#0CA5B0]/30"
-                      onClick={() => window.open(`https://solscan.io/token/${mintStr}`, '_blank')}
+                  <div className="space-y-2">
+                    <a 
+                      href={`/listings?token=${mintStr}`}
+                      className="text-[10px] font-mono text-[#0CA5B0] hover:text-[#0CA5B0]/80 uppercase tracking-widest flex items-center gap-2 mb-3"
                     >
-                      View on Solscan
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                      View Pair Listings <span>→</span>
+                    </a>
+                    
+                    {isAuthority && (
+                      <div className="flex gap-2 pt-2 border-t border-white/5">
                         <Button 
-                          variant="destructive" 
-                          size="sm"
-                          disabled={!isAuthority || adminLoading}
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 text-gray-400 hover:text-[#0CA5B0] hover:border-[#0CA5B0]/30 text-[10px]"
+                          onClick={() => window.open(`https://solscan.io/token/${mintStr}`, '_blank')}
                         >
-                          Remove
+                          Solscan
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent size="sm">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remove token from whitelist?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will prevent new listings using this token. Existing active listings will not be affected.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            className="bg-red-500 hover:bg-red-600 border-red-500 text-white"
-                            onClick={() => handleRemoveToken(token.tokenMint)}
-                          >
-                            Remove Token
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              disabled={adminLoading}
+                              className="text-[10px]"
+                            >
+                              Remove
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent size="sm">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove token from whitelist?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will prevent new listings using this token. Existing active listings will not be affected.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                className="bg-red-500 hover:bg-red-600 border-red-500 text-white"
+                                onClick={() => handleRemoveToken(token.mint)}
+                              >
+                                Remove Token
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -315,7 +356,7 @@ export default function AdminTokenWhitelistPage() {
                 placeholder="Token Mint Address (e.g., EPjFW...)"
                 value={newTokenMint}
                 onChange={(e) => setNewTokenMint(e.target.value)}
-                className="bg-black border-white/10"
+                className="bg-background border-border h-12 font-mono text-sm"
               />
             </div>
             <AlertDialogFooter>
