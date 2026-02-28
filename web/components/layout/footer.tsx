@@ -1,28 +1,63 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { Twitter, Github, FileText } from 'lucide-react';
 
 export default function Footer() {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use resolvedTheme to get the actual theme (handles 'system' preference)
+  const currentTheme = mounted ? (resolvedTheme || theme) : 'dark';
+  const logoSrc = currentTheme === 'dark' ? '/selix-logo-dark.png' : '/selix-logo-light.png';
+
   return (
     <footer className="bg-background border-t border-border pt-12 md:pt-20 pb-16 md:pb-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16">
         <div className="space-y-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
-            <span className="font-mono text-sm tracking-widest font-bold uppercase">
-              SELIX_PROTOCOL
-            </span>
+          <div className="flex items-center">
+            {mounted && (
+              <Image 
+                src={logoSrc} 
+                alt="Selix Protocol" 
+                width={120} 
+                height={32}
+                className="h-8 w-auto"
+              />
+            )}
+            {!mounted && (
+              <div className="h-8 w-[120px] bg-muted animate-pulse" />
+            )}
           </div>
           <p className="text-muted-foreground text-sm">Decentralized OTC protocol on Solana.</p>
           <div className="flex items-center gap-3">
-            <a href="#" className="w-8 h-8 flex items-center justify-center border border-border bg-card text-primary hover:text-foreground transition-colors">
-              𝕏
+            <a 
+              href="#" 
+              className="w-9 h-9 flex items-center justify-center border border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors"
+              aria-label="Twitter"
+            >
+              <Twitter className="w-4 h-4" />
             </a>
-            <a href="#" className="w-8 h-8 flex items-center justify-center border border-border bg-card text-primary hover:text-foreground transition-colors">
-              D
+            <a 
+              href="#" 
+              className="w-9 h-9 flex items-center justify-center border border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors"
+              aria-label="GitHub"
+            >
+              <Github className="w-4 h-4" />
             </a>
-            <a href="#" className="w-8 h-8 flex items-center justify-center border border-border bg-card text-primary hover:text-foreground transition-colors">
-              G
+            <a 
+              href="#" 
+              className="w-9 h-9 flex items-center justify-center border border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors"
+              aria-label="Documentation"
+            >
+              <FileText className="w-4 h-4" />
             </a>
           </div>
         </div>
@@ -33,24 +68,17 @@ export default function Footer() {
             <li><Link href="/create" className="hover:text-primary transition-colors">Create Listing</Link></li>
             <li><Link href="/user/listings" className="hover:text-primary transition-colors">My Listings</Link></li>
             <li><Link href="/user/swaps" className="hover:text-primary transition-colors">My Swaps</Link></li>
+            <li><Link href="/user/profile" className="hover:text-primary transition-colors">Profile</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="font-mono text-[10px] uppercase tracking-widest mb-6 md:mb-8">Resources</h4>
           <ul className="space-y-3 md:space-y-4 text-muted-foreground text-xs font-mono">
-            <li><Link href="/docs" className="hover:text-primary transition-colors">Documentation</Link></li>
-            <li><a href="#" className="hover:text-primary transition-colors">GitHub</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Solana Explorer</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Audit Report</a></li>
+            <li><Link href="/admin" className="hover:text-primary transition-colors">Admin</Link></li>
+            <li><Link href="/admin/stats" className="hover:text-primary transition-colors">Statistics</Link></li>
+            <li><Link href="/admin/whitelist" className="hover:text-primary transition-colors">Whitelist</Link></li>
+            <li><Link href="/test" className="hover:text-primary transition-colors">Component Test</Link></li>
           </ul>
-        </div>
-        <div>
-          <h4 className="font-mono text-[10px] uppercase tracking-widest mb-6 md:mb-8">Network Status</h4>
-          <div className="space-y-3 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-            <div>Network: <span className="text-foreground">Solana Mainnet</span></div>
-            <div>TPS: <span className="text-green-500">3,421</span></div>
-            <div>Block: <span className="text-foreground">#254,192,842</span></div>
-          </div>
         </div>
       </div>
       

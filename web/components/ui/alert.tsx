@@ -7,12 +7,12 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-card border-border text-foreground",
-        info: "bg-gradient-to-r from-primary/10 to-transparent border-primary/20 text-foreground",
-        success: "bg-gradient-to-r from-green-900/20 to-transparent border-green-500/20 text-green-200",
-        warning: "bg-gradient-to-r from-orange-900/20 to-transparent border-orange-500/20 text-orange-200",
-        destructive: "bg-gradient-to-r from-red-900/20 to-transparent border-red-900/50 text-red-200",
-        restricted: "bg-gradient-to-r from-red-900 to-background border-red-900/50 text-red-200",
+        default: "bg-card text-foreground border-border dark:border-muted-foreground/20",
+        info: "bg-gradient-to-r from-primary/10 to-transparent border-primary/20 text-primary dark:text-foreground",
+        success: "bg-gradient-to-r from-green-500/10 to-transparent border-green-500/20 text-green-700 dark:text-green-200",
+        warning: "bg-gradient-to-r from-orange-500/10 to-transparent border-orange-500/20 text-orange-700 dark:text-orange-200",
+        destructive: "bg-gradient-to-r from-red-500/10 to-transparent border-red-500/20 text-red-700 dark:text-red-200",
+        restricted: "bg-gradient-to-r from-red-500/20 to-background border-red-500/50 text-red-700 dark:text-red-200",
       },
     },
     defaultVariants: {
