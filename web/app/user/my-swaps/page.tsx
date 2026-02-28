@@ -6,6 +6,7 @@ import { PublicKey } from '@solana/web3.js';
 import { Coins } from 'lucide-react';
 import Navigation from '@/components/layout/navigation';
 import StatusBar from '@/components/layout/status-bar';
+import WalletRequired from '@/components/wallet/wallet-required';
 import { Button } from '@/components/ui/button';
 import { useFetchSwaps, useTokensMetadata } from '@/lib/solana/hooks';
 import { useUserProfile } from '@/lib/solana/hooks/user/use-user-profile';
@@ -168,11 +169,14 @@ export default function MySwapsPage() {
       <div className="w-full min-h-screen bg-background text-foreground">
         <Navigation />
         <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto">
-          <div className="text-center py-12">
-            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
-              Please connect your wallet to view your swaps
-            </p>
-          </div>
+          <WalletRequired
+            title="Wallet Required"
+            description="Please connect your Solana wallet to view your swap history."
+            backLink="/listings"
+            backLinkText="← Browse Listings"
+            infoTitle="Connect Your Wallet"
+            infoDescription="Click the wallet button in the navigation bar to connect your Solana wallet and view your swap history including partial fills."
+          />
         </main>
         <StatusBar />
       </div>

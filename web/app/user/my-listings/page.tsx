@@ -8,6 +8,7 @@ import { BN } from '@coral-xyz/anchor';
 import { Coins } from 'lucide-react';
 import Navigation from '@/components/layout/navigation';
 import StatusBar from '@/components/layout/status-bar';
+import WalletRequired from '@/components/wallet/wallet-required';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -194,12 +195,15 @@ export default function MyListingsPage() {
     return (
       <div className="w-full min-h-screen bg-background text-foreground">
         <Navigation />
-        <main className="pt-32 pb-24 px-8 max-w-[1280px] mx-auto">
-          <div className="text-center py-12">
-            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
-              Please connect your wallet to view your listings
-            </p>
-          </div>
+        <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto">
+          <WalletRequired
+            title="Wallet Required"
+            description="Please connect your Solana wallet to view and manage your listings."
+            backLink="/listings"
+            backLinkText="← Browse Listings"
+            infoTitle="Connect Your Wallet"
+            infoDescription="Click the wallet button in the navigation bar to connect your Solana wallet and manage your token swap listings."
+          />
         </main>
         <StatusBar />
       </div>
