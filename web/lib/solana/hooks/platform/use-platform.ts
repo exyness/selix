@@ -63,10 +63,6 @@ export function usePlatform() {
     };
 
     fetchPlatform();
-    
-    // Poll every 30 seconds
-    const interval = setInterval(fetchPlatform, 30000);
-    return () => clearInterval(interval);
   }, [program]);
 
   return { platform, loading };
@@ -129,10 +125,6 @@ export function useAllWhitelisted() {
 
   useEffect(() => {
     fetchAllWhitelisted();
-    
-    // Poll every 30 seconds
-    const interval = setInterval(fetchAllWhitelisted, 30000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program]);
 

@@ -55,10 +55,6 @@ export function useFetchListings() {
     };
 
     fetchListings();
-    
-    // Poll every 10 seconds
-    const interval = setInterval(fetchListings, 10000);
-    return () => clearInterval(interval);
   }, [program]);
 
   return { listings, loading };
