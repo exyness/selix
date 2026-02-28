@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { Coins } from 'lucide-react';
 import Navigation from '@/components/layout/navigation';
 import StatusBar from '@/components/layout/status-bar';
 import { Button } from '@/components/ui/button';
@@ -22,24 +23,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useFetchListings, useExecuteSwap, useCancelListing } from '@/lib/solana/hooks';
+import { useFetchListings, useExecuteSwap, useCancelListing, useTokensMetadata } from '@/lib/solana/hooks';
 import { toast } from 'sonner';
+import { CountdownTimer } from '@/components/ui/countdown-timer';
 
 function formatAddress(address: string) {
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
-}
-
-function formatTimeRemaining(expiresAt: bigint) {
-  const now = Math.floor(Date.now() / 1000);
-  const remaining = Number(expiresAt) - now;
-  
-  if (remaining <= 0) return 'Expired';
-  
-  const hours = Math.floor(remaining / 3600);
-  const minutes = Math.floor((remaining % 3600) / 60);
-  const seconds = remaining % 60;
-  
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 function formatDate(timestamp: bigint) {
@@ -61,6 +50,15 @@ export default function ListingDetailPage() {
 
   const listingId = params.id as string;
 
+  // Fetch token metadata for the listing
+  const tokenMints = listing ? [listing.tokenMintSource.toString(), listing.tokenMintDestination.toString()] : [];
+  const { tokensMetadata, loading: metadataLoading } = useTokensMetadata(
+    tokenMints.map(mint => new PublicKey(mint))
+  );
+
+  const sourceTokenMetadata = tokensMetadata.find(t => t.mint === listing?.tokenMintSource.toString());
+  const destTokenMetadata = tokensMetadata.find(t => t.mint === listing?.tokenMintDestination.toString());
+
   useEffect(() => {
     if (!loading && listings.length > 0) {
       const found = listings.find(l => l.publicKey.toString() === listingId);
@@ -70,14 +68,14 @@ export default function ListingDetailPage() {
     }
   }, [listings, loading, listingId]);
 
-  if (loading) {
+  if (loading || metadataLoading) {
     return (
-      <div className="w-full min-h-screen bg-[#050505] text-[#EAEAEA]">
+      <div className="w-full min-h-screen bg-background text-foreground">
         <Navigation />
         <main className="pt-32 pb-24 px-6 max-w-[1280px] mx-auto">
           <div className="text-center py-12">
-            <div className="inline-block w-8 h-8 border-2 border-[#0CA5B0] border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-[11px] font-mono text-gray-500 uppercase tracking-widest">Loading listing...</p>
+            <div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Loading listing...</p>
           </div>
         </main>
         <StatusBar />
@@ -87,11 +85,11 @@ export default function ListingDetailPage() {
 
   if (!listing) {
     return (
-      <div className="w-full min-h-screen bg-[#050505] text-[#EAEAEA]">
+      <div className="w-full min-h-screen bg-background text-foreground">
         <Navigation />
         <main className="pt-32 pb-24 px-6 max-w-[1280px] mx-auto">
           <div className="text-center py-12">
-            <p className="text-[11px] font-mono text-gray-500 uppercase tracking-widest">Listing not found</p>
+            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Listing not found</p>
             <Link href="/listings">
               <Button variant="outline" size="sm" className="mt-4">Back to Market</Button>
             </Link>
@@ -107,6 +105,20 @@ export default function ListingDetailPage() {
   const isMaker = connected && publicKey && listing.maker.toString() === publicKey.toString();
   const isActive = listing.status.active !== undefined;
 
+  // Format amounts with decimals
+  const formatTokenAmount = (amount: bigint, decimals: number = 9) => {
+    const num = Number(amount) / Math.pow(10, decimals);
+    return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  };
+
+  const sourceDecimals = sourceTokenMetadata?.decimals || 9;
+  const destDecimals = destTokenMetadata?.decimals || 9;
+
+  const amountSourceTotal = formatTokenAmount(listing.amountSourceTotal, sourceDecimals);
+  const amountSourceRemaining = formatTokenAmount(listing.amountSourceRemaining, sourceDecimals);
+  const amountSourceFilled = formatTokenAmount(listing.amountSourceTotal - listing.amountSourceRemaining, sourceDecimals);
+  const minFillFormatted = formatTokenAmount(listing.minFillAmount, sourceDecimals);
+
   const handleExecuteSwap = async () => {
     if (!connected || !publicKey) {
       toast.error('Please connect your wallet');
@@ -119,26 +131,29 @@ export default function ListingDetailPage() {
       return;
     }
 
-    const minFill = Number(listing.minFillAmount);
-    const remaining = Number(listing.amountSourceRemaining);
+    const minFill = parseFloat(minFillFormatted.replace(/,/g, ''));
+    const remaining = parseFloat(amountSourceRemaining.replace(/,/g, ''));
 
     if (amount < minFill) {
-      toast.error(`Minimum fill amount is ${minFill}`);
+      toast.error(`Minimum fill amount is ${minFillFormatted}`);
       return;
     }
 
     if (amount > remaining) {
-      toast.error(`Only ${remaining} available`);
+      toast.error(`Only ${amountSourceRemaining} available`);
       return;
     }
 
     try {
+      // Convert to raw token amount (with decimals)
+      const amountRaw = Math.floor(amount * Math.pow(10, sourceDecimals));
+      
       const result = await executeSwap({
         listing: listing.publicKey,
         maker: listing.maker,
         offeredMint: listing.tokenMintSource,
         requestedMint: listing.tokenMintDestination,
-        fillAmount: amount,
+        fillAmount: amountRaw,
       });
 
       if (result) {
@@ -165,15 +180,42 @@ export default function ListingDetailPage() {
 
   const receiveAmount = swapAmount ? (parseFloat(swapAmount) * rate).toFixed(6) : '0.00';
 
+  // Token display component
+  const TokenDisplay = ({ metadata, mint, size = 'md' }: { metadata?: any; mint: string; size?: 'sm' | 'md' | 'lg' }) => {
+    const sizeClasses = {
+      sm: 'w-6 h-6',
+      md: 'w-10 h-10',
+      lg: 'w-12 h-12'
+    };
+    
+    return (
+      <div className={`${sizeClasses[size]} rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden`}>
+        {metadata?.image ? (
+          <img 
+            src={metadata.image} 
+            alt={metadata.symbol || 'Token'} 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <Coins className={size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} style={{ display: metadata?.image ? 'none' : 'block' }} />
+      </div>
+    );
+  };
+
   return (
-    <div className="w-full min-h-screen bg-[#050505] text-[#EAEAEA]">
+    <div className="w-full min-h-screen bg-background text-foreground">
       <Navigation />
 
       <main className="pt-32 pb-24 px-6 max-w-[1280px] mx-auto">
         {/* Back Button */}
         <div className="mb-8">
           <Link href="/listings">
-            <Button variant="ghost" size="xs" className="text-gray-500 gap-1.5">
+            <Button variant="ghost" size="xs" className="text-muted-foreground gap-1.5">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               Back to Market
             </Button>
@@ -185,79 +227,81 @@ export default function ListingDetailPage() {
           <div className="col-span-12 lg:col-span-7 space-y-8">
 
             {/* Listing Header */}
-            <div className="bg-[#0A0A0A] border border-white/5 p-8">
+            <div className="bg-card border border-border p-8">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
                 <div className="flex items-center gap-6">
                   <div className="flex -space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-[#111] border border-white/10 flex items-center justify-center relative z-10">
-                      <span className="text-[10px] font-bold font-mono">{formatAddress(listing.tokenMintSource.toString()).slice(0, 2)}</span>
+                    <div className="relative z-10">
+                      <TokenDisplay metadata={sourceTokenMetadata} mint={listing.tokenMintSource.toString()} size="lg" />
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-[#111] border border-white/10 flex items-center justify-center relative z-0">
-                      <span className="text-[10px] font-bold font-mono">{formatAddress(listing.tokenMintDestination.toString()).slice(0, 2)}</span>
+                    <div className="relative z-0">
+                      <TokenDisplay metadata={destTokenMetadata} mint={listing.tokenMintDestination.toString()} size="lg" />
                     </div>
                   </div>
                   <div>
                     <div className="flex items-center gap-3 mb-1">
                       <h2 className="text-2xl font-medium">
-                        {formatAddress(listing.tokenMintSource.toString())} <span className="text-gray-600">→</span> {formatAddress(listing.tokenMintDestination.toString())}
+                        {sourceTokenMetadata?.symbol || formatAddress(listing.tokenMintSource.toString())} 
+                        <span className="text-muted-foreground mx-2">→</span> 
+                        {destTokenMetadata?.symbol || formatAddress(listing.tokenMintDestination.toString())}
                       </h2>
                       <Badge className={isActive 
                         ? 'text-green-500 bg-green-500/10 border-green-500/20'
-                        : 'text-gray-500 bg-gray-500/10 border-gray-500/20'
+                        : 'text-muted-foreground bg-muted border-border'
                       }>
                         {isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 font-mono text-[10px] text-gray-500 tracking-wider">
+                    <div className="flex items-center gap-4 font-mono text-[10px] text-muted-foreground tracking-wider">
                       <span>ID: {formatAddress(listing.publicKey.toString())}</span>
                       <span>CREATED: {formatDate(listing.createdAt)}</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-1">Expires In</span>
-                  <span className="text-xl font-mono text-white">{formatTimeRemaining(listing.expiresAt)}</span>
+                  <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-1">Expires In</span>
+                  <CountdownTimer expiresAt={listing.expiresAt} className="text-xl font-mono text-foreground" />
                 </div>
               </div>
 
               {/* Exchange Details */}
-              <div className="grid grid-cols-2 gap-y-8 pt-8 border-t border-white/5">
+              <div className="grid grid-cols-2 gap-y-8 pt-8 border-t border-border">
                 <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Exchange Rate</span>
+                  <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Exchange Rate</span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-mono text-[#0CA5B0]">{rate.toFixed(6)}</span>
-                    <span className="text-[10px] font-mono text-gray-500">per token</span>
+                    <span className="text-2xl font-mono text-primary">{rate.toFixed(6)}</span>
+                    <span className="text-xs font-mono text-muted-foreground">per token</span>
                   </div>
                 </div>
                 <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Fill Progress</span>
+                  <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Fill Progress</span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-mono text-white">{progress.toFixed(2)}%</span>
-                    <span className="text-[10px] font-mono text-gray-500">
-                      {Number(listing.amountSourceTotal - listing.amountSourceRemaining).toLocaleString()} / {Number(listing.amountSourceTotal).toLocaleString()}
+                    <span className="text-2xl font-mono text-foreground">{progress.toFixed(2)}%</span>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {amountSourceFilled} / {amountSourceTotal}
                     </span>
                   </div>
                 </div>
                 <div className="col-span-2">
-                  <div className="w-full h-[3px] bg-white/5 mb-2">
-                    <div className="h-full bg-[#0CA5B0]" style={{ width: `${progress}%` }} />
+                  <div className="w-full h-[3px] bg-muted mb-2">
+                    <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
                 <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Min Fill Amount</span>
-                  <span className="text-sm font-mono text-white">{Number(listing.minFillAmount).toLocaleString()}</span>
+                  <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Min Fill Amount</span>
+                  <span className="text-base font-mono text-foreground">{minFillFormatted}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Max Slippage</span>
-                  <span className="text-sm font-mono text-white">{(listing.maxSlippageBps / 100).toFixed(2)}%</span>
+                  <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Max Slippage</span>
+                  <span className="text-base font-mono text-foreground">{(listing.maxSlippageBps / 100).toFixed(2)}%</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Fill Count</span>
-                  <span className="text-sm font-mono text-white">{listing.fillCount}</span>
+                  <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Fill Count</span>
+                  <span className="text-base font-mono text-foreground">{listing.fillCount}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Remaining</span>
-                  <span className="text-sm font-mono text-white">{Number(listing.amountSourceRemaining).toLocaleString()}</span>
+                  <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Remaining</span>
+                  <span className="text-base font-mono text-foreground">{amountSourceRemaining}</span>
                 </div>
               </div>
             </div>
@@ -267,69 +311,75 @@ export default function ListingDetailPage() {
           <div className="col-span-12 lg:col-span-5 space-y-6">
             {/* Swap Execution Form */}
             {!isMaker && isActive && (
-              <div className="sticky top-24 bg-[#0A0A0A] border border-white/10 p-6">
+              <div className="sticky top-24 bg-card border border-border p-6">
                 <div className="mb-6">
                   <div className="flex justify-between mb-2">
-                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">You Send</label>
-                    <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Available: {Number(listing.amountSourceRemaining).toLocaleString()}</span>
+                    <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">You Send</label>
+                    <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Available: {amountSourceRemaining}</span>
                   </div>
-                  <div className="relative bg-[#111] border border-white/10 p-4 focus-within:border-[#0CA5B0]/50 transition-colors">
-                    <div className="flex items-center justify-between">
+                  <div className="relative bg-muted border border-border p-4 focus-within:border-primary/50 transition-colors">
+                    <div className="flex items-center justify-between gap-3">
                       <Input
                         type="number"
                         placeholder="0.00"
                         value={swapAmount}
                         onChange={(e) => setSwapAmount(e.target.value)}
-                        className="border-0 bg-transparent text-xl h-auto p-0 focus-visible:ring-0 w-full"
+                        className="border-0 bg-transparent text-xl h-auto p-0 focus-visible:ring-0 w-full font-mono"
                         disabled={!connected}
                       />
                       <div className="flex items-center gap-3 shrink-0">
                         <Button 
                           variant="ghost" 
                           size="xs" 
-                          className="text-[#0CA5B0] h-auto py-0.5"
-                          onClick={() => setSwapAmount(Number(listing.amountSourceRemaining).toString())}
+                          className="text-primary h-auto py-0.5"
+                          onClick={() => setSwapAmount(parseFloat(amountSourceRemaining.replace(/,/g, '')).toString())}
                           disabled={!connected}
                         >
                           MAX
                         </Button>
-                        <span className="text-sm font-medium">{formatAddress(listing.tokenMintDestination.toString())}</span>
+                        <div className="flex items-center gap-2">
+                          <TokenDisplay metadata={destTokenMetadata} mint={listing.tokenMintDestination.toString()} size="sm" />
+                          <span className="text-sm font-medium">{destTokenMetadata?.symbol || formatAddress(listing.tokenMintDestination.toString())}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-center -my-4 relative z-10">
-                  <div className="w-8 h-8 bg-[#050505] border border-white/10 flex items-center justify-center">
-                    <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7-7-7m14-8l-7 7-7-7" /></svg>
+                  <div className="w-8 h-8 bg-background border border-border flex items-center justify-center">
+                    <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7-7-7m14-8l-7 7-7-7" /></svg>
                   </div>
                 </div>
 
                 <div className="mb-6">
                   <div className="flex justify-between mb-2">
-                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">You Receive (Est.)</label>
+                    <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">You Receive (Est.)</label>
                   </div>
-                  <div className="bg-[#111] border border-white/10 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-mono text-white">{receiveAmount}</span>
-                      <span className="text-sm font-medium">{formatAddress(listing.tokenMintSource.toString())}</span>
+                  <div className="bg-muted border border-border p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xl font-mono text-foreground">{receiveAmount}</span>
+                      <div className="flex items-center gap-2">
+                        <TokenDisplay metadata={sourceTokenMetadata} mint={listing.tokenMintSource.toString()} size="sm" />
+                        <span className="text-sm font-medium">{sourceTokenMetadata?.symbol || formatAddress(listing.tokenMintSource.toString())}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-8 text-[10px] font-mono">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Protocol Fee (0.1%)</span>
-                    <span className="text-white">{swapAmount ? (parseFloat(swapAmount) * 0.001).toFixed(6) : '0.00'}</span>
+                    <span className="text-muted-foreground">Protocol Fee (0.1%)</span>
+                    <span className="text-foreground">{swapAmount ? (parseFloat(swapAmount) * 0.001).toFixed(6) : '0.00'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Network Fee</span>
-                    <span className="text-white">~0.000005 SOL</span>
+                    <span className="text-muted-foreground">Network Fee</span>
+                    <span className="text-foreground">~0.000005 SOL</span>
                   </div>
                   <Separator className="my-2" />
                   <div className="flex justify-between font-bold">
-                    <span className="text-gray-400 uppercase tracking-widest">Exchange Rate</span>
-                    <span className="text-white">{rate.toFixed(6)}</span>
+                    <span className="text-muted-foreground uppercase tracking-widest">Exchange Rate</span>
+                    <span className="text-foreground">{rate.toFixed(6)}</span>
                   </div>
                 </div>
 
@@ -337,13 +387,13 @@ export default function ListingDetailPage() {
                   <Button 
                     onClick={handleExecuteSwap}
                     disabled={swapLoading || !swapAmount}
-                    className="w-full bg-[#0CA5B0] hover:bg-[#0CA5B0]/90 text-black font-mono font-bold text-[11px] uppercase tracking-[0.2em] h-12 border-[#0CA5B0] disabled:opacity-50"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-[11px] uppercase tracking-[0.2em] h-12 disabled:opacity-50"
                   >
                     {swapLoading ? 'Executing...' : 'Execute Swap'}
                   </Button>
                 ) : (
                   <Button 
-                    className="w-full bg-[#0CA5B0] hover:bg-[#0CA5B0]/90 text-black font-mono font-bold text-[11px] uppercase tracking-[0.2em] h-12 border-[#0CA5B0]"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-[11px] uppercase tracking-[0.2em] h-12"
                   >
                     Connect Wallet to Swap
                   </Button>
@@ -352,11 +402,15 @@ export default function ListingDetailPage() {
             )}
 
             {/* Maker Info */}
-            <div className="bg-[#0A0A0A] border border-white/5 p-6">
-              <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-4">Listing Maker</span>
+            <div className="bg-card border border-border p-6">
+              <span className="block text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-4">Listing Maker</span>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/5 rounded-full" />
+                  <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center border border-border">
+                    <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
                   <span className="text-xs font-mono">{formatAddress(listing.maker.toString())}</span>
                 </div>
                 <div className="flex gap-1">
@@ -397,11 +451,11 @@ export default function ListingDetailPage() {
 
             {/* Maker Action Buttons */}
             {isMaker && isActive && (
-              <div className="pt-4 border-t border-white/5">
+              <div className="pt-4 border-t border-border">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm" className="w-full" disabled={cancelLoading}>
-                      Cancel Listing
+                      {cancelLoading ? 'Cancelling...' : 'Cancel Listing'}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent size="sm">
@@ -424,281 +478,6 @@ export default function ListingDetailPage() {
                 </AlertDialog>
               </div>
             )}
-          </div>
-        </div>
-      </main>
-
-      <StatusBar />
-    </div>
-  );
-}
-  return (
-    <div className="w-full min-h-screen bg-[#050505] text-[#EAEAEA]">
-      <Navigation />
-
-      <main className="pt-32 pb-24 px-6 max-w-[1280px] mx-auto">
-        {/* Back Button */}
-        <div className="mb-8">
-          <Link href="/listings">
-            <Button variant="ghost" size="xs" className="text-gray-500 gap-1.5">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-              Back to Market
-            </Button>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-12 gap-8">
-          {/* Left Column — Listing Details */}
-          <div className="col-span-12 lg:col-span-7 space-y-8">
-
-            {/* Listing Header */}
-            <div className="bg-[#0A0A0A] border border-white/5 p-8">
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
-                <div className="flex items-center gap-6">
-                  <div className="flex -space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-[#111] border border-white/10 flex items-center justify-center relative z-10">
-                      <span className="text-[10px] font-bold font-mono">USDC</span>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-[#111] border border-white/10 flex items-center justify-center relative z-0">
-                      <span className="text-[10px] font-bold font-mono">SOL</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h2 className="text-2xl font-medium">USDC <span className="text-gray-600">→</span> SOL</h2>
-                      <Badge className="text-green-500 bg-green-500/10 border-green-500/20">Active</Badge>
-                    </div>
-                    <div className="flex items-center gap-4 font-mono text-[10px] text-gray-500 tracking-wider">
-                      <span>ID: #SLX-00291</span>
-                      <span>CREATED: 24 OCT, 14:02 UTC</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-1">Expires In</span>
-                  <span className="text-xl font-mono text-white">04:12:08</span>
-                </div>
-              </div>
-
-              {/* Exchange Details */}
-              <div className="grid grid-cols-2 gap-y-8 pt-8 border-t border-white/5">
-                <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Exchange Rate</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-mono text-[#0CA5B0]">142.45</span>
-                    <span className="text-[10px] font-mono text-gray-500">USDC / SOL</span>
-                  </div>
-                </div>
-                <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Fill Progress</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-mono text-white">84.00%</span>
-                    <span className="text-[10px] font-mono text-gray-500">4,200 / 5,000 USDC</span>
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="w-full h-[3px] bg-white/5 mb-2">
-                    <div className="h-full bg-[#0CA5B0]" style={{ width: '84%' }} />
-                  </div>
-                </div>
-                <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Min Fill Amount</span>
-                  <span className="text-sm font-mono text-white">10.00 USDC</span>
-                </div>
-                <div>
-                  <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">Max Slippage</span>
-                  <span className="text-sm font-mono text-white">0.50%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Fill History */}
-            <div className="bg-[#0A0A0A] border border-white/5">
-              <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                <h3 className="font-mono text-[10px] text-white uppercase tracking-[0.2em]">Fill History</h3>
-                <span className="text-[9px] font-mono text-gray-500">3 Events Found</span>
-              </div>
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-[9px] font-mono text-gray-600 uppercase tracking-widest">
-                    <th className="px-6 py-4">Taker</th>
-                    <th className="px-6 py-4">Amount</th>
-                    <th className="px-6 py-4">Time</th>
-                    <th className="px-6 py-4 text-right">TX</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 font-mono text-[11px]">
-                  {[
-                    { taker: '4zHk...m9Q2', amount: '350.00 USDC', time: '2m ago' },
-                    { taker: '8vP9...x3A1', amount: '1,200.00 USDC', time: '14m ago' },
-                    { taker: 'K8m3...z5T8', amount: '2,650.00 USDC', time: '1h 04m ago' },
-                  ].map((fill, i) => (
-                    <tr key={i} className="hover:bg-white/[0.01]">
-                      <td className="px-6 py-4 text-gray-400">{fill.taker}</td>
-                      <td className="px-6 py-4 text-white">{fill.amount}</td>
-                      <td className="px-6 py-4 text-gray-500">{fill.time}</td>
-                      <td className="px-6 py-4 text-right">
-                        <a href="#" className="text-[#0CA5B0] hover:underline">↗</a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Simulation Preview */}
-            <div className="p-6 bg-[#0CA5B0]/5 border border-[#0CA5B0]/20">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0CA5B0]" />
-                <h4 className="text-[10px] font-mono text-[#0CA5B0] uppercase tracking-widest">Simulation Preview</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-[11px] font-mono">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Balance Change:</span>
-                  <span className="text-white">-800.00 USDC</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Receive:</span>
-                  <span className="text-green-500">+5.616 SOL</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Network State:</span>
-                  <span className="text-white">Success</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Est. Compute:</span>
-                  <span className="text-white">24,192 CU</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column — Swap Form */}
-          <div className="col-span-12 lg:col-span-5 space-y-6">
-            {/* Swap Execution Form */}
-            <div className="sticky top-24 bg-[#0A0A0A] border border-white/10 p-6">
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">You Send</label>
-                  <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Balance: 1,420.50</span>
-                </div>
-                <div className="relative bg-[#111] border border-white/10 p-4 focus-within:border-[#0CA5B0]/50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      className="border-0 bg-transparent text-xl h-auto p-0 focus-visible:ring-0 w-full"
-                    />
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Button variant="ghost" size="xs" className="text-[#0CA5B0] h-auto py-0.5">MAX</Button>
-                      <span className="text-sm font-medium">USDC</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-center -my-4 relative z-10">
-                <div className="w-8 h-8 bg-[#050505] border border-white/10 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7-7-7m14-8l-7 7-7-7" /></svg>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">You Receive (Est.)</label>
-                </div>
-                <div className="bg-[#111] border border-white/10 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-mono text-white/40">0.00</span>
-                    <span className="text-sm font-medium">SOL</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-8 text-[10px] font-mono">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Protocol Fee (0.1%)</span>
-                  <span className="text-white">0.80 USDC</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Network Fee</span>
-                  <span className="text-white">0.000005 SOL</span>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex justify-between font-bold">
-                  <span className="text-gray-400 uppercase tracking-widest">Total Cost</span>
-                  <span className="text-white">800.80 USDC</span>
-                </div>
-              </div>
-
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-[11px] uppercase tracking-[0.2em] h-12 border-primary">
-                Execute Swap
-              </Button>
-            </div>
-
-            {/* Maker Info */}
-            <div className="bg-[#0A0A0A] border border-white/5 p-6">
-              <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-4">Listing Maker</span>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/5 rounded-full" />
-                  <span className="text-xs font-mono">7xR9...e2Lp</span>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon-xs">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
-                  </Button>
-                  <Button variant="ghost" size="icon-xs">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
-                <div>
-                  <span className="block text-[9px] font-mono text-gray-500 mb-1">Total Listings</span>
-                  <span className="text-sm font-mono">42</span>
-                </div>
-                <div>
-                  <span className="block text-[9px] font-mono text-gray-500 mb-1">Total Swaps</span>
-                  <span className="text-sm font-mono">1.2k</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Share Buttons */}
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="flex-1 gap-2">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                Copy Link
-              </Button>
-              <Button variant="outline" size="icon-sm">
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-              </Button>
-            </div>
-
-            {/* Maker Action Buttons */}
-            <div className="pt-4 border-t border-white/5 grid grid-cols-2 gap-3">
-              <Button variant="outline" size="sm">Update Listing</Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">Cancel Listing</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent size="sm">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Cancel Listing #SLX-00291?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will return your deposited tokens minus network fees. The remaining 800 USDC will be refunded.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Keep Listing</AlertDialogCancel>
-                    <AlertDialogAction className="bg-red-500 hover:bg-red-600 border-red-500 text-white">
-                      Cancel Listing
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
           </div>
         </div>
       </main>
