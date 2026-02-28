@@ -27,13 +27,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAllWhitelisted, usePlatform, useAdmin } from '@/lib/solana/hooks';
-import { useTokenMetadata } from '@/lib/solana/hooks/token/use-token-metadata';
+import { useAllWhitelisted, usePlatform, useAdmin, useTokensMetadata } from '@/lib/solana/hooks';
 import { toast } from 'sonner';
 import WalletRequired from '@/components/wallet/wallet-required';
 
-function TokenCard({ token, isAuthority, adminLoading, onRemove }: any) {
-  const { metadata, loading: metadataLoading } = useTokenMetadata(token.mint);
+function TokenCard({ token, metadata, isAuthority, adminLoading, onRemove }: any) {
   
   const mintStr = token.mint.toString();
   const shortMint = `${mintStr.slice(0, 4)}...${mintStr.slice(-4)}`;
@@ -54,15 +52,27 @@ function TokenCard({ token, isAuthority, adminLoading, onRemove }: any) {
 
       {/* Token Header */}
       <div className="flex items-center gap-5 mb-6">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center flex-shrink-0">
-          <Coins className="w-8 h-8 text-primary" />
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {metadata?.image ? (
+            <img 
+              src={metadata.image} 
+              alt={metadata.symbol} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <Coins className="w-8 h-8 text-primary" style={{ display: metadata?.image ? 'none' : 'block' }} />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-xl font-mono font-bold text-foreground leading-tight truncate">
-            {metadataLoading ? '...' : metadata?.name || shortMint}
+            {metadata?.name || shortMint}
           </h3>
           <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
-            {metadataLoading ? '...' : metadata?.symbol || 'TOKEN'}
+            {metadata?.symbol || 'TOKEN'}
           </p>
         </div>
       </div>
@@ -88,6 +98,12 @@ function TokenCard({ token, isAuthority, adminLoading, onRemove }: any) {
             </Button>
           </div>
         </div>
+        {metadata?.decimals && (
+          <div className="flex items-center justify-between text-[10px] font-mono">
+            <span className="text-muted-foreground">DECIMALS</span>
+            <span className="text-foreground">{metadata.decimals}</span>
+          </div>
+        )}
         <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -157,6 +173,10 @@ export default function AdminTokenWhitelistPage() {
   const { platform } = usePlatform();
   const { manageWhitelist, loading: adminLoading } = useAdmin();
   
+  // Fetch metadata for all whitelisted tokens
+  const whitelistedMints = whitelisted.map(entry => entry.mint);
+  const { tokensMetadata, loading: metadataLoading } = useTokensMetadata(whitelistedMints);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'a-z' | 'z-a'>('newest');
   const [newTokenMint, setNewTokenMint] = useState('');
@@ -193,12 +213,20 @@ export default function AdminTokenWhitelistPage() {
     }
   };
 
-  // Filter and sort tokens
-  const filteredTokens = whitelisted
+  // Filter and sort tokens with metadata
+  const tokensWithMetadata = whitelisted.map((token) => {
+    const metadata = tokensMetadata.find(m => m.mint === token.mint.toString());
+    return { ...token, metadata };
+  });
+
+  const filteredTokens = tokensWithMetadata
     .filter((token) => {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
-      return token.mint.toString().toLowerCase().includes(query);
+      const mintMatch = token.mint.toString().toLowerCase().includes(query);
+      const symbolMatch = token.metadata?.symbol?.toLowerCase().includes(query);
+      const nameMatch = token.metadata?.name?.toLowerCase().includes(query);
+      return mintMatch || symbolMatch || nameMatch;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -207,21 +235,26 @@ export default function AdminTokenWhitelistPage() {
         case 'oldest':
           return Number(a.updatedAt) - Number(b.updatedAt);
         case 'a-z':
-          return a.mint.toString().localeCompare(b.mint.toString());
+          return (a.metadata?.symbol || a.mint.toString()).localeCompare(
+            b.metadata?.symbol || b.mint.toString()
+          );
         case 'z-a':
-          return b.mint.toString().localeCompare(a.mint.toString());
+          return (b.metadata?.symbol || b.mint.toString()).localeCompare(
+            a.metadata?.symbol || a.mint.toString()
+          );
         default:
           return 0;
       }
     });
-  if (loading) {
+
+  if (loading || metadataLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <Navigation />
         <main className="pt-32 pb-24 px-10 max-w-[1280px] mx-auto">
           <div className="text-center py-12">
             <div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Loading whitelist...</p>
+            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Loading token metadata...</p>
           </div>
         </main>
         <StatusBar />
@@ -363,6 +396,7 @@ export default function AdminTokenWhitelistPage() {
                 <TokenCard
                   key={token.mint.toString()}
                   token={token}
+                  metadata={token.metadata}
                   isAuthority={isAuthority}
                   adminLoading={adminLoading}
                   onRemove={handleRemoveToken}
