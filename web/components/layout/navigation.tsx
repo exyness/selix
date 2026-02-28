@@ -90,14 +90,6 @@ export default function Navigation() {
               Admin
             </Link>
           )}
-          <Link 
-            href="/docs" 
-            className={`text-[11px] font-mono font-medium transition-colors tracking-widest uppercase ${
-              isActive('/docs') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Docs
-          </Link>
         </div>
         <WalletButton />
         <ThemeToggle />
