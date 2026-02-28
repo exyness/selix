@@ -70,6 +70,16 @@ export default function Navigation() {
           >
             My Swaps
           </Link>
+          {connected && publicKey && (
+            <Link 
+              href={`/user/profile/${publicKey.toString()}`}
+              className={`text-[11px] font-mono font-medium transition-colors tracking-widest uppercase ${
+                isActive('/user/profile') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Profile
+            </Link>
+          )}
           {isAuthority && (
             <Link 
               href="/admin" 
