@@ -188,6 +188,18 @@ export default function AdminTokenWhitelistPage() {
               />
             </div>
             <Button 
+              variant="outline" 
+              size="default"
+              onClick={() => refetch()}
+              disabled={loading}
+              className="h-12 border-border text-muted-foreground hover:text-foreground"
+            >
+              <svg className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </Button>
+            <Button 
               onClick={() => setShowAddDialog(true)}
               disabled={!isAuthority || adminLoading}
               className="bg-primary text-primary-foreground border-primary font-bold h-12" 
@@ -244,7 +256,7 @@ export default function AdminTokenWhitelistPage() {
                 <div key={mintStr} className="bg-[#0A0A0A] border border-white/5 p-6 relative group hover:border-[#0CA5B0]/30 transition-all">
                   {/* Approved Badge */}
                   <div className="absolute top-4 right-4">
-                    <Badge className="bg-[#0CA5B0]/10 text-[#0CA5B0] border-[#0CA5B0]/40 text-[8px]">
+                    <Badge className="bg-primary/10 text-primary border-primary/40 text-[8px]">
                       APPROVED
                     </Badge>
                   </div>
@@ -362,7 +374,7 @@ export default function AdminTokenWhitelistPage() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction 
-                className="bg-[#0CA5B0] hover:bg-[#0CA5B0]/90 text-black border-[#0CA5B0]"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground border-primary"
                 onClick={handleAddToken}
                 disabled={adminLoading}
               >

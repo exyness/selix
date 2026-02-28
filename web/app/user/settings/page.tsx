@@ -205,7 +205,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Save Button */}
-        <Button className="w-full bg-[#0CA5B0] hover:bg-[#0CA5B0]/90 text-black font-mono font-bold text-xs uppercase tracking-[0.3em] h-14 gap-3 border-[#0CA5B0]">
+        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-xs uppercase tracking-[0.3em] h-14 gap-3 border-primary">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V4a1 1 0 10-2 0v7.586l-1.293-1.293z" /><path d="M5 15a2 2 0 002 2h6a2 2 0 002-2v-1a1 1 0 10-2 0v1H7v-1a1 1 0 10-2 0v1z" /></svg>
           Save Preferences
         </Button>

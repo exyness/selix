@@ -47,7 +47,7 @@ const listingsTrendData = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 export default function PlatformStatisticsPage() {
-  const { platform, loading } = usePlatform();
+  const { platform, loading, refetch } = usePlatform();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -64,9 +64,23 @@ export default function PlatformStatisticsPage() {
               Statistics
             </h1>
           </div>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Live Data</span>
+          <div className="flex items-center gap-4 mb-1">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => refetch()}
+              disabled={loading}
+              className="border-border text-muted-foreground hover:text-foreground"
+            >
+              <svg className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Live Data</span>
+            </div>
           </div>
         </header>
 
@@ -325,8 +339,8 @@ export default function PlatformStatisticsPage() {
             <div className="text-xl font-mono text-foreground">78.4%</div>
           </div>
           <div className="flex items-center justify-end">
-            <Badge className="gap-2 bg-green-500/10 text-green-500 border-green-500/20 px-3 py-1 text-[10px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+            <Badge className="gap-2 bg-green-500/10 dark:bg-green-500/20 text-green-500 dark:text-green-400 border-green-500/20 dark:border-green-500/30 px-3 py-1 text-[10px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 inline-block" />
               ACTIVE
             </Badge>
           </div>

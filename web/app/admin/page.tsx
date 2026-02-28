@@ -30,7 +30,7 @@ import WalletRequired from '@/components/wallet/wallet-required';
 
 export default function AdminDashboardPage() {
   const { publicKey, connected } = useWallet();
-  const { platform, loading: platformLoading } = usePlatform();
+  const { platform, loading: platformLoading, refetch: refetchPlatform } = usePlatform();
   const { pausePlatform, updateConfig, setFeeCollector, loading: adminLoading } = useAdmin();
   const router = useRouter();
 
@@ -61,7 +61,7 @@ export default function AdminDashboardPage() {
     const result = await pausePlatform(true);
     if (result) {
       toast.success('Platform paused successfully');
-      router.refresh();
+      await refetchPlatform();
     }
   };
 
@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
     const result = await pausePlatform(false);
     if (result) {
       toast.success('Platform resumed successfully');
-      router.refresh();
+      await refetchPlatform();
     }
   };
 
@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
     
     if (result) {
       toast.success('Configuration saved successfully');
-      router.refresh();
+      await refetchPlatform();
     }
   };
 
@@ -101,7 +101,7 @@ export default function AdminDashboardPage() {
       if (result) {
         setNewCollector('');
         toast.success('Fee collector updated successfully');
-        router.refresh();
+        await refetchPlatform();
       }
     } catch {
       toast.error('Invalid public key');
@@ -196,14 +196,28 @@ export default function AdminDashboardPage() {
             <div className="text-[10px] font-mono text-primary tracking-[0.3em] uppercase mb-2">{'/// Admin Panel'}</div>
             <h1 className="text-4xl font-mono font-bold tracking-tight text-foreground uppercase">Admin</h1>
           </div>
-          <Link href="/admin/whitelist">
-            <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => refetchPlatform()}
+              disabled={platformLoading}
+              className="border-border text-muted-foreground hover:text-foreground"
+            >
+              <svg className={`w-4 h-4 mr-2 ${platformLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Manage Whitelist
+              Refresh
             </Button>
-          </Link>
+            <Link href="/admin/whitelist">
+              <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Manage Whitelist
+              </Button>
+            </Link>
+          </div>
         </header>
 
         {!isAuthority && (
@@ -227,9 +241,9 @@ export default function AdminDashboardPage() {
                 <Badge className={`gap-2 px-4 py-1.5 ${
                   platform.isPaused 
                     ? 'bg-destructive/10 text-destructive border-destructive/20'
-                    : 'bg-green-500/10 text-green-500 border-green-500/20'
+                    : 'bg-green-500/10 dark:bg-green-500/20 text-green-500 dark:text-green-400 border-green-500/20 dark:border-green-500/30'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${platform.isPaused ? 'bg-destructive' : 'bg-green-500 animate-pulse'} inline-block`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${platform.isPaused ? 'bg-destructive' : 'bg-green-500 dark:bg-green-400 animate-pulse'} inline-block`} />
                   {platform.isPaused ? 'PAUSED' : 'ACTIVE'}
                 </Badge>
               </div>

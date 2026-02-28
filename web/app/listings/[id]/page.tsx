@@ -631,7 +631,7 @@ export default function ListingDetailPage() {
                 </div>
               </div>
 
-              <Button className="w-full bg-[#0CA5B0] hover:bg-[#0CA5B0]/90 text-black font-mono font-bold text-[11px] uppercase tracking-[0.2em] h-12 border-[#0CA5B0]">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-[11px] uppercase tracking-[0.2em] h-12 border-primary">
                 Execute Swap
               </Button>
             </div>

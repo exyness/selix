@@ -133,7 +133,7 @@ export default function MyListingsPage() {
             ))}
           </div>
           <Link href="/create">
-            <Button className="mb-4 bg-[#0CA5B0] text-black hover:bg-[#0CA5B0]/90 border-[#0CA5B0]" size="sm">
+            <Button className="mb-4 bg-primary text-primary-foreground hover:bg-primary/90 border-primary" size="sm">
               + New Listing
             </Button>
           </Link>
@@ -154,7 +154,7 @@ export default function MyListingsPage() {
               You don't have any active listings
             </p>
             <Link href="/create">
-              <Button className="bg-[#0CA5B0] text-black hover:bg-[#0CA5B0]/90 border-[#0CA5B0]" size="sm">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary" size="sm">
                 Create Your First Listing
               </Button>
             </Link>

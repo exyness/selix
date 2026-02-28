@@ -38,34 +38,35 @@ export function usePlatform() {
   const [platform, setPlatform] = useState<PlatformConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchPlatform = async () => {
     if (!program) {
       setLoading(false);
       return;
     }
 
-    const fetchPlatform = async () => {
-      setLoading(true);
-      try {
-        // We need to get all platform accounts since we don't know the authority
-        const accounts = await program.account.platform.all();
-        if (accounts.length > 0) {
-          setPlatform(accounts[0].account as PlatformConfig);
-        } else {
-          setPlatform(null);
-        }
-      } catch (error) {
-        console.error('Error fetching platform:', error);
+    setLoading(true);
+    try {
+      // We need to get all platform accounts since we don't know the authority
+      const accounts = await program.account.platform.all();
+      if (accounts.length > 0) {
+        setPlatform(accounts[0].account as PlatformConfig);
+      } else {
         setPlatform(null);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching platform:', error);
+      setPlatform(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPlatform();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program]);
 
-  return { platform, loading };
+  return { platform, loading, refetch: fetchPlatform };
 }
 
 export function useWhitelist(tokenMint?: PublicKey) {
@@ -73,29 +74,31 @@ export function useWhitelist(tokenMint?: PublicKey) {
   const [whitelist, setWhitelist] = useState<WhitelistEntry | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchWhitelist = async () => {
     if (!program || !tokenMint) {
       setLoading(false);
       return;
     }
 
-    const fetchWhitelist = async () => {
-      try {
-        const [whitelistPda] = getWhitelistPDA(tokenMint);
-        const whitelistAccount = await program.account.tokenWhitelist.fetch(whitelistPda);
-        setWhitelist(whitelistAccount as WhitelistEntry);
-      } catch {
-        // Entry doesn't exist
-        setWhitelist(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    try {
+      const [whitelistPda] = getWhitelistPDA(tokenMint);
+      const whitelistAccount = await program.account.tokenWhitelist.fetch(whitelistPda);
+      setWhitelist(whitelistAccount as WhitelistEntry);
+    } catch {
+      // Entry doesn't exist
+      setWhitelist(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchWhitelist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program, tokenMint]);
 
-  return { whitelist, loading };
+  return { whitelist, loading, refetch: fetchWhitelist };
 }
 
 export function useAllWhitelisted() {

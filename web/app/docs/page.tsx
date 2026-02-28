@@ -77,7 +77,7 @@ export default function DocsPage() {
             </div>
 
             <div className="flex gap-3">
-              <Button className="bg-[#0CA5B0] text-black hover:bg-[#0CA5B0]/90 border-[#0CA5B0]">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary">
                 Browse Market
               </Button>
               <Button variant="outline">
