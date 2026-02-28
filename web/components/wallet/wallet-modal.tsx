@@ -32,10 +32,20 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
     try {
       setSelectedWallet(walletName);
       select(walletName);
-      await connect();
+      
+      // Wait for wallet to be selected before connecting
+      setTimeout(async () => {
+        try {
+          await connect();
+        } catch (error) {
+          console.error('Error connecting wallet:', error);
+          toast.error('Failed to connect wallet');
+          setSelectedWallet(null);
+        }
+      }, 100);
     } catch (error) {
-      console.error('Error connecting wallet:', error);
-      toast.error('Failed to connect wallet');
+      console.error('Error selecting wallet:', error);
+      toast.error('Failed to select wallet');
       setSelectedWallet(null);
     }
   };
