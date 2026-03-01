@@ -10,7 +10,7 @@ import StatusBar from '@/components/layout/status-bar';
 import { useProgram } from '@/lib/solana/use-program';
 import { useQuery } from '@tanstack/react-query';
 import { getUserProfilePDA } from '@/lib/anchor/setup';
-import { useFetchListings, useFetchSwaps } from '@/lib/solana/hooks';
+import { useFetchListings, useFetchSwaps, useTokensMetadata } from '@/lib/solana/hooks';
 import { toast } from 'sonner';
 
 interface UserProfile {
@@ -29,6 +29,40 @@ interface UserProfile {
   volumeAsTaker: bigint;
   totalFeesPaid: bigint;
   listingsCancelled: number;
+}
+
+interface TokenMetadata {
+  mint: string;
+  symbol?: string;
+  name?: string;
+  image?: string;
+  decimals?: number;
+}
+
+function TokenDisplay({ metadata, mint, size = 'sm' }: { metadata?: TokenMetadata; mint: string; size?: 'sm' | 'xs' }) {
+  const sizeClasses = {
+    xs: 'w-4 h-4',
+    sm: 'w-5 h-5'
+  };
+  
+  return (
+    <div className={`${sizeClasses[size]} rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0`}>
+      {metadata?.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img 
+          src={metadata.image} 
+          alt={metadata.symbol || 'Token'} 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+            if (fallback) fallback.style.display = 'flex';
+          }}
+        />
+      ) : null}
+      <Coins className={size === 'xs' ? 'w-2 h-2' : 'w-2.5 h-2.5'} style={{ display: metadata?.image ? 'none' : 'block' }} />
+    </div>
+  );
 }
 
 function formatAddress(address: string) {
@@ -93,6 +127,22 @@ export default function UserProfilePage() {
 
   // Fetch user's swaps
   const { swaps } = useFetchSwaps(userPublicKey);
+
+  // Get all unique token mints from user's listings and swaps
+  const tokenMints = useMemo(() => {
+    const mints = new Set<string>();
+    userListings.forEach(listing => {
+      mints.add(listing.tokenMintSource.toString());
+      mints.add(listing.tokenMintDestination.toString());
+    });
+    swaps.forEach(swap => {
+      mints.add(swap.tokenMintSource.toString());
+      mints.add(swap.tokenMintDestination.toString());
+    });
+    return Array.from(mints).map(mint => new PublicKey(mint));
+  }, [userListings, swaps]);
+
+  const { tokensMetadata } = useTokensMetadata(tokenMints);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(address);
@@ -350,10 +400,21 @@ export default function UserProfilePage() {
                           ? { label: 'CANCELLED', color: 'text-gray-500 bg-gray-500/10 border-gray-500/20' }
                           : { label: 'EXPIRED', color: 'text-red-500 bg-red-500/10 border-red-500/20' };
                         
+                        const sourceToken = tokensMetadata.find(t => t.mint === listing.tokenMintSource.toString());
+                        const destToken = tokensMetadata.find(t => t.mint === listing.tokenMintDestination.toString());
+                        
                         return (
                           <tr key={i} className="border-b border-border hover:bg-muted/30 transition-colors">
                             <td className="px-4 py-3 text-foreground whitespace-nowrap">
-                              {formatAddress(listing.tokenMintSource.toString())} / {formatAddress(listing.tokenMintDestination.toString())}
+                              <div className="flex items-center gap-2">
+                                <div className="flex -space-x-1">
+                                  <TokenDisplay metadata={sourceToken} mint={listing.tokenMintSource.toString()} size="xs" />
+                                  <TokenDisplay metadata={destToken} mint={listing.tokenMintDestination.toString()} size="xs" />
+                                </div>
+                                <span>
+                                  {sourceToken?.symbol || formatAddress(listing.tokenMintSource.toString())} / {destToken?.symbol || formatAddress(listing.tokenMintDestination.toString())}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-4 py-3">{fillPercentage}%</td>
                             <td className="px-4 py-3">
@@ -396,20 +457,34 @@ export default function UserProfilePage() {
                       </tr>
                     </thead>
                     <tbody className="text-[10px] font-mono">
-                      {recentSwaps.map((swap, i) => (
-                        <tr key={i} className="border-b border-border hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3 text-foreground whitespace-nowrap">
-                            {formatAddress(swap.tokenMintSource.toString())} <span className="text-primary">→</span> {formatAddress(swap.tokenMintDestination.toString())}
-                          </td>
-                          <td className="px-4 py-3">{(swap.amountSource.toNumber() / 1e9).toFixed(4)}</td>
-                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                            {new Date(swap.blockTime * 1000).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}, {new Date(swap.blockTime * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-green-500">SUCCESS</span>
-                          </td>
-                        </tr>
-                      ))}
+                      {recentSwaps.map((swap, i) => {
+                        const sourceToken = tokensMetadata.find(t => t.mint === swap.tokenMintSource.toString());
+                        const destToken = tokensMetadata.find(t => t.mint === swap.tokenMintDestination.toString());
+                        const sourceDecimals = sourceToken?.decimals || 9;
+                        
+                        return (
+                          <tr key={i} className="border-b border-border hover:bg-muted/30 transition-colors">
+                            <td className="px-4 py-3 text-foreground whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <div className="flex -space-x-1">
+                                  <TokenDisplay metadata={sourceToken} mint={swap.tokenMintSource.toString()} size="xs" />
+                                  <TokenDisplay metadata={destToken} mint={swap.tokenMintDestination.toString()} size="xs" />
+                                </div>
+                                <span>
+                                  {sourceToken?.symbol || formatAddress(swap.tokenMintSource.toString())} <span className="text-primary">→</span> {destToken?.symbol || formatAddress(swap.tokenMintDestination.toString())}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">{(swap.amountSource.toNumber() / Math.pow(10, sourceDecimals)).toFixed(4)}</td>
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                              {new Date(swap.blockTime * 1000).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}, {new Date(swap.blockTime * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-green-500">SUCCESS</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
