@@ -55,6 +55,14 @@ export default function Navigation() {
             Market
           </Link>
           <Link 
+            href="/faucet" 
+            className={`text-[11px] font-mono font-medium transition-colors tracking-widest uppercase ${
+              isActive('/faucet') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Faucet
+          </Link>
+          <Link 
             href="/user/my-listings" 
             className={`text-[11px] font-mono font-medium transition-colors tracking-widest uppercase ${
               isActive('/user/my-listings') ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
