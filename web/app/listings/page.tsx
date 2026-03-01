@@ -180,13 +180,13 @@ export default function MarketplacePage() {
     if (statusFilter === 'active') {
       filtered = filtered.filter(listing => {
         const isExpired = isListingExpired(listing.expiresAt);
-        return listing.status.active !== undefined && !isExpired;
+        return 'active' in listing.status && !isExpired;
       });
     } else if (statusFilter === 'partial') {
       filtered = filtered.filter(listing => {
         const filled = Number(listing.amountSourceTotal - listing.amountSourceRemaining);
         const isExpired = isListingExpired(listing.expiresAt);
-        return filled > 0 && listing.amountSourceRemaining > 0n && !isExpired;
+        return filled > 0 && listing.amountSourceRemaining > BigInt(0) && !isExpired;
       });
     }
     

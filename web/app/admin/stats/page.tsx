@@ -3,6 +3,7 @@
 import { usePlatform } from '@/lib/solana/hooks';
 import Navigation from '@/components/layout/navigation';
 import StatusBar from '@/components/layout/status-bar';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';

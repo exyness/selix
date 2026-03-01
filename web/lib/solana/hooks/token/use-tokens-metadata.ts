@@ -5,7 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { useQuery } from '@tanstack/react-query';
 import { getMint } from '@solana/spl-token';
 
-export interface TokenMetadata {
+export interface TokensMetadata {
   mint: string;
   name: string;
   symbol: string;
@@ -16,12 +16,12 @@ export interface TokenMetadata {
 export function useTokensMetadata(mints: PublicKey[]) {
   const { connection } = useConnection();
 
-  const { data: tokensMetadata, isLoading: loading, refetch } = useQuery({
+  const { data: tokensMetadata, isLoading: loading, refetch } = useQuery<TokensMetadata[]>({
     queryKey: ['tokensMetadata', mints.map(m => m.toString()).join(',')],
     queryFn: async () => {
       if (mints.length === 0) return [];
 
-      const metadataPromises = mints.map(async (mint) => {
+      const metadataPromises = mints.map(async (mint): Promise<TokensMetadata> => {
         try {
           // First, get the mint account to get decimals
           const mintInfo = await getMint(connection, mint);

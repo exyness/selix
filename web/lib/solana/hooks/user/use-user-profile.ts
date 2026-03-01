@@ -8,10 +8,19 @@ import { BN } from '@coral-xyz/anchor';
 
 export interface UserProfile {
   user: string;
+  referrer: string | null;
   listingsCreated: number;
+  listingsCancelled: number;
   swapsExecuted: number;
-  totalVolume: bigint;
-  referralCount: number;
+  swapsReceived: number;
+  activeListings: number;
+  volumeAsMaker: bigint;
+  volumeAsTaker: bigint;
+  totalFeesPaid: number;
+  defaultListingDuration: number;
+  defaultSlippageBps: number;
+  createdAt: number;
+  lastActivityAt: number;
   bump: number;
 }
 
@@ -31,7 +40,25 @@ export function useUserProfile() {
       try {
         const [profilePda] = getUserProfilePDA(wallet.publicKey!);
         const profileAccount = await program.account.userProfile.fetch(profilePda);
-        setProfile(profileAccount as UserProfile);
+        
+        // Transform the account data to match the interface
+        setProfile({
+          user: profileAccount.user.toString(),
+          referrer: profileAccount.referrer?.toString() || null,
+          listingsCreated: profileAccount.listingsCreated.toNumber(),
+          listingsCancelled: profileAccount.listingsCancelled.toNumber(),
+          swapsExecuted: profileAccount.swapsExecuted.toNumber(),
+          swapsReceived: profileAccount.swapsReceived.toNumber(),
+          activeListings: profileAccount.activeListings,
+          volumeAsMaker: BigInt(profileAccount.volumeAsMaker.toString()),
+          volumeAsTaker: BigInt(profileAccount.volumeAsTaker.toString()),
+          totalFeesPaid: profileAccount.totalFeesPaid.toNumber(),
+          defaultListingDuration: profileAccount.defaultListingDuration.toNumber(),
+          defaultSlippageBps: profileAccount.defaultSlippageBps,
+          createdAt: profileAccount.createdAt.toNumber(),
+          lastActivityAt: profileAccount.lastActivityAt.toNumber(),
+          bump: profileAccount.bump,
+        });
       } catch {
         // Profile doesn't exist yet
         setProfile(null);
@@ -60,7 +87,6 @@ export function useUserProfile() {
         })
         .accounts({
           user: wallet.publicKey,
-          userProfile: profilePda,
           referrer: null,
         })
         .rpc();
@@ -69,7 +95,23 @@ export function useUserProfile() {
       
       // Refetch profile
       const profileAccount = await program.account.userProfile.fetch(profilePda);
-      setProfile(profileAccount as UserProfile);
+      setProfile({
+        user: profileAccount.user.toString(),
+        referrer: profileAccount.referrer?.toString() || null,
+        listingsCreated: profileAccount.listingsCreated.toNumber(),
+        listingsCancelled: profileAccount.listingsCancelled.toNumber(),
+        swapsExecuted: profileAccount.swapsExecuted.toNumber(),
+        swapsReceived: profileAccount.swapsReceived.toNumber(),
+        activeListings: profileAccount.activeListings,
+        volumeAsMaker: BigInt(profileAccount.volumeAsMaker.toString()),
+        volumeAsTaker: BigInt(profileAccount.volumeAsTaker.toString()),
+        totalFeesPaid: profileAccount.totalFeesPaid.toNumber(),
+        defaultListingDuration: profileAccount.defaultListingDuration.toNumber(),
+        defaultSlippageBps: profileAccount.defaultSlippageBps,
+        createdAt: profileAccount.createdAt.toNumber(),
+        lastActivityAt: profileAccount.lastActivityAt.toNumber(),
+        bump: profileAccount.bump,
+      });
       
       return { signature: tx };
     } catch (error: unknown) {

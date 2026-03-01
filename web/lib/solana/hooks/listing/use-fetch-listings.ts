@@ -41,7 +41,7 @@ export function useFetchListings() {
       
       // Show active and partially filled listings
       const activeListings = listingsData.filter(
-        (listing) => listing.status.active !== undefined || listing.status.partiallyFilled !== undefined
+        (listing) => 'active' in listing.status || 'partiallyFilled' in listing.status
       );
       
       return activeListings;

@@ -221,7 +221,7 @@ export default function MyListingsPage() {
             { label: 'Total Created', value: profile?.listingsCreated?.toString() || '0', highlight: false },
             { label: 'Active Listings', value: activeListings.length.toString(), highlight: true },
             { label: 'Completion Rate', value: completedListings.length > 0 ? `${((completedListings.length / myListings.length) * 100).toFixed(1)}%` : '0%', highlight: false },
-            { label: 'Total Volume', value: profile?.volumeAsMaker ? `${profile.volumeAsMaker.toNumber() / 1e9} SOL` : '0 SOL', highlight: false },
+            { label: 'Total Volume', value: profile ? `${(Number(profile.volumeAsMaker + profile.volumeAsTaker) / 1e9).toFixed(2)} SOL` : '0 SOL', highlight: false },
           ].map((stat) => (
             <div key={stat.label} className="bg-card border border-border p-4 sm:p-6 space-y-2">
               <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">{stat.label}</span>

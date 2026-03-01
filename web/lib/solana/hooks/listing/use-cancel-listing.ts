@@ -43,14 +43,6 @@ export function useCancelListing() {
 
       const tx = await program.methods
         .cancelListing()
-        .accounts({
-          maker: wallet.publicKey,
-          makerProfile,
-          listing,
-          vault,
-          tokenMintSource: offeredMint,
-          makerTokenAccountSource: makerAta,
-        })
         .rpc();
 
       return { signature: tx };

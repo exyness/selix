@@ -27,8 +27,6 @@ export function useAdmin() {
 
     setLoading(true);
     try {
-      const [platform] = getPlatformPDA(wallet.publicKey);
-
       const tx = await program.methods
         .initializePlatform({
           feeBasisPoints: params.feeBasisPoints,
@@ -39,7 +37,6 @@ export function useAdmin() {
         })
         .accounts({
           authority: wallet.publicKey,
-          platform,
           feeCollector: params.feeCollector,
         })
         .rpc();
@@ -65,13 +62,10 @@ export function useAdmin() {
 
     setLoading(true);
     try {
-      const [platform] = getPlatformPDA(wallet.publicKey);
-
       const tx = await program.methods
         .pausePlatform()
         .accounts({
           authority: wallet.publicKey,
-          platform,
         })
         .rpc();
 
@@ -102,8 +96,6 @@ export function useAdmin() {
 
     setLoading(true);
     try {
-      const [platform] = getPlatformPDA(wallet.publicKey);
-
       const tx = await program.methods
         .updateConfig({
           feeBasisPoints: params.feeBasisPoints ?? null,
@@ -115,7 +107,6 @@ export function useAdmin() {
         })
         .accounts({
           authority: wallet.publicKey,
-          platform,
         })
         .rpc();
 
@@ -140,15 +131,10 @@ export function useAdmin() {
 
     setLoading(true);
     try {
-      const [platform] = getPlatformPDA(wallet.publicKey);
-
       const tx = await program.methods
-        .setFeeCollector({
-          newCollector,
-        })
+        .setFeeCollector()
         .accounts({
-          authority: wallet.publicKey,
-          platform,
+          newFeeCollector: newCollector,
         })
         .rpc();
 
@@ -173,16 +159,10 @@ export function useAdmin() {
 
     setLoading(true);
     try {
-      const [platform] = getPlatformPDA(wallet.publicKey);
-      const [whitelistEntry] = getWhitelistPDA(tokenMint);
-
       const tx = await program.methods
         .manageWhitelist(isWhitelisted)
         .accounts({
-          authority: wallet.publicKey,
-          platform,
           tokenMint,
-          whitelistEntry,
         })
         .rpc();
 

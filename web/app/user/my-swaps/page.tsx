@@ -107,7 +107,7 @@ export default function MySwapsPage() {
     }, 0);
     
     // Calculate total volume as maker (from user profile)
-    const totalVolumeMaker = profile?.totalVolume ? Number(profile.totalVolume) / 1e9 : 0;
+    const totalVolumeMaker = profile ? Number(profile.volumeAsMaker) / 1e9 : 0;
     
     // Calculate total fees - convert to destination token decimals
     const totalFees = filteredSwaps.reduce((sum, swap) => {
