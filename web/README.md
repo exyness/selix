@@ -7,6 +7,7 @@ Next.js frontend for the Selix Protocol decentralized token swap platform on Sol
 - **Marketplace** - Browse and search token swap listings
 - **Create Listings** - List your tokens for swap with custom parameters
 - **Execute Swaps** - Swap tokens with other users (full or partial fills)
+- **Test Token Faucet** - Request test tokens on devnet (100 tokens per hour per token)
 - **My Listings** - Manage your active, completed, and cancelled listings
 - **My Swaps** - View your swap history with detailed transaction data
 - **User Profiles** - Track activity, volume, and statistics
@@ -72,7 +73,9 @@ web/
 ├── app/                    # Next.js app router pages
 │   ├── listings/          # Marketplace and listing pages
 │   ├── user/              # User-specific pages
-│   └── admin/             # Admin dashboard
+│   ├── admin/             # Admin dashboard
+│   ├── faucet/            # Test token faucet
+│   └── api/               # API routes
 ├── components/            # React components
 │   ├── layout/           # Navigation, footer, etc.
 │   ├── ui/               # Reusable UI components
@@ -115,6 +118,13 @@ web/
 - Fee management
 - Token whitelist
 - Pause/resume platform
+
+### Test Token Faucet (Devnet Only)
+- Request 100 test tokens per hour
+- Support for all whitelisted tokens
+- Automatic token account creation
+- Rate limiting per wallet per token
+- Easy testing without manual airdrops
 
 ## Wallet Integration
 
@@ -167,6 +177,7 @@ yarn type-check
 |----------|-------------|---------|
 | `NEXT_PUBLIC_SOLANA_NETWORK` | Solana network (mainnet-beta, devnet, testnet) | devnet |
 | `NEXT_PUBLIC_SOLANA_RPC_URL` | RPC endpoint URL | https://api.devnet.solana.com |
+| `FAUCET_PRIVATE_KEY` | Private key for faucet wallet (devnet only, base58 encoded) | - |
 
 ## Deployment
 

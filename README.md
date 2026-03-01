@@ -8,6 +8,7 @@ A decentralized token swap platform built on Solana using the Anchor framework. 
 
 - **Token Swap Listings** - Create listings with customizable amounts, slippage tolerance, and expiration
 - **Partial Fill Support** - Execute swaps with minimum fill amounts for flexible trading
+- **Test Token Faucet** - Request test tokens on devnet for testing platform features
 - **Platform Controls** - Admin dashboard for pause/resume, fee configuration, and token whitelisting
 - **User Profiles** - Track activity, volume, and referral statistics on-chain
 - **Vault-Based Escrow** - Secure token custody during active listings
@@ -108,6 +109,13 @@ Administrators can:
 - Configure fee basis points
 - Manage token whitelist
 - Update platform parameters
+
+### Test Token Faucet
+For testing on devnet:
+- Request 100 tokens per hour for any whitelisted token
+- Automatic token account creation
+- Rate limiting per wallet per token
+- Easy access to test tokens for platform testing
 
 ## Security
 
