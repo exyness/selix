@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useFetchListings, useCancelListing, useUserProfile, useTokensMetadata, type Listing } from '@/lib/solana/hooks';
+import { useFetchListings, useCancelListing, useCloseExpiredListing, useUserProfile, useTokensMetadata, type Listing } from '@/lib/solana/hooks';
 import { toast } from 'sonner';
 
 interface TokenMetadata {
@@ -81,6 +81,11 @@ function isListingExpired(expiresAt: BN): boolean {
   return expiresAt.toNumber() <= now;
 }
 
+function formatTokenAmount(amount: BN, decimals: number = 9): string {
+  const num = amount.toNumber() / Math.pow(10, decimals);
+  return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
+}
+
 function getListingStatus(listing: Listing): { label: string; className: string } {
   const isExpired = isListingExpired(listing.expiresAt);
   const status = listing.status;
@@ -130,8 +135,9 @@ export default function MyListingsPage() {
   const { publicKey, connected } = useWallet();
   const { listings, loading } = useFetchListings();
   const { cancelListing, loading: cancelLoading } = useCancelListing();
+  const { closeExpiredListing, loading: closeLoading } = useCloseExpiredListing();
   const { profile } = useUserProfile();
-  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'cancelled' | 'expired'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'expired'>('active');
   const [shareListingId, setShareListingId] = useState<string | null>(null);
 
   // Filter listings by connected wallet
@@ -157,7 +163,6 @@ export default function MyListingsPage() {
 
   const activeListings = myListings.filter(l => 'active' in l.status || 'partiallyFilled' in l.status);
   const completedListings = myListings.filter(l => 'completed' in l.status);
-  const cancelledListings = myListings.filter(l => 'cancelled' in l.status);
   const expiredListings = myListings.filter(l => {
     const isExpired = isListingExpired(l.expiresAt);
     return isExpired || 'expired' in l.status;
@@ -170,14 +175,12 @@ export default function MyListingsPage() {
         return activeListings;
       case 'completed':
         return completedListings;
-      case 'cancelled':
-        return cancelledListings;
       case 'expired':
         return expiredListings;
       default:
         return activeListings;
     }
-  }, [activeTab, activeListings, completedListings, cancelledListings, expiredListings]);
+  }, [activeTab, activeListings, completedListings, expiredListings]);
 
   const handleCancelListing = async (listingPubkey: PublicKey, tokenMint: PublicKey) => {
     try {
@@ -188,6 +191,18 @@ export default function MyListingsPage() {
       }
     } catch (error) {
       console.error('Error cancelling listing:', error);
+    }
+  };
+
+  const handleCloseExpiredListing = async (listingPubkey: PublicKey, maker: PublicKey, tokenMint: PublicKey) => {
+    try {
+      const result = await closeExpiredListing(listingPubkey, maker, tokenMint);
+      
+      if (result) {
+        toast.success('Expired listing closed successfully!');
+      }
+    } catch (error) {
+      console.error('Error closing expired listing:', error);
     }
   };
 
@@ -236,7 +251,6 @@ export default function MyListingsPage() {
             {[
               { label: 'Active', count: activeListings.length, value: 'active' as const },
               { label: 'Completed', count: completedListings.length, value: 'completed' as const },
-              { label: 'Cancelled', count: cancelledListings.length, value: 'cancelled' as const },
               { label: 'Expired', count: expiredListings.length, value: 'expired' as const },
             ].map((tab) => (
               <button
@@ -276,7 +290,6 @@ export default function MyListingsPage() {
             <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest mb-4">
               {activeTab === 'active' && "You don't have any active listings"}
               {activeTab === 'completed' && "You don't have any completed listings"}
-              {activeTab === 'cancelled' && "You don't have any cancelled listings"}
               {activeTab === 'expired' && "You don't have any expired listings"}
             </p>
             {activeTab === 'active' && (
@@ -293,12 +306,14 @@ export default function MyListingsPage() {
         {!loading && !metadataLoading && currentListings.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {currentListings.map((listing) => {
-              const progress = listing.amountSourceTotal.sub(listing.amountSourceRemaining).toNumber() / listing.amountSourceTotal.toNumber() * 100;
-              const filled = listing.amountSourceTotal.sub(listing.amountSourceRemaining).toNumber();
-              const total = listing.amountSourceTotal.toNumber();
-              
               const sourceTokenMetadata = tokensMetadata.find(t => t.mint === listing.tokenMintSource.toString());
               const destTokenMetadata = tokensMetadata.find(t => t.mint === listing.tokenMintDestination.toString());
+              
+              const sourceDecimals = sourceTokenMetadata?.decimals || 9;
+              
+              const progress = listing.amountSourceTotal.sub(listing.amountSourceRemaining).toNumber() / listing.amountSourceTotal.toNumber() * 100;
+              const filled = formatTokenAmount(listing.amountSourceTotal.sub(listing.amountSourceRemaining), sourceDecimals);
+              const total = formatTokenAmount(listing.amountSourceTotal, sourceDecimals);
               
               const status = getListingStatus(listing);
 
@@ -343,7 +358,7 @@ export default function MyListingsPage() {
                   <div className="space-y-2 mb-6 sm:mb-8">
                     <div className="flex justify-between text-[10px] font-mono text-muted-foreground">
                       <span>Progress: {progress.toFixed(1)}% Filled</span>
-                      <span className="text-right">{filled.toLocaleString()} / {total.toLocaleString()}</span>
+                      <span className="text-right">{filled} / {total}</span>
                     </div>
                     <div className="w-full h-1.5 bg-muted overflow-hidden rounded-full">
                       <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
@@ -358,24 +373,24 @@ export default function MyListingsPage() {
                           View Details
                         </Button>
                       </Link>
-                      {(activeTab === 'active' || activeTab === 'expired') && (
+                      {(('active' in listing.status) || ('partiallyFilled' in listing.status) || isListingExpired(listing.expiresAt)) && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
                               variant="outline" 
                               size="sm" 
                               className="flex-1 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-500 gap-2" 
-                              disabled={cancelLoading}
+                              disabled={isListingExpired(listing.expiresAt) ? closeLoading : cancelLoading}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                              {activeTab === 'expired' ? 'Close' : 'Cancel'}
+                              {isListingExpired(listing.expiresAt) ? 'Close' : 'Cancel'}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>{activeTab === 'expired' ? 'Close' : 'Cancel'} this listing?</AlertDialogTitle>
+                              <AlertDialogTitle>{isListingExpired(listing.expiresAt) ? 'Close' : 'Cancel'} this listing?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                {activeTab === 'expired' 
+                                {isListingExpired(listing.expiresAt)
                                   ? 'This will close the expired listing and return your remaining tokens.'
                                   : 'Cancellation returns your deposited tokens minus network fees.'}
                               </AlertDialogDescription>
@@ -384,12 +399,22 @@ export default function MyListingsPage() {
                               <AlertDialogCancel>Keep Listing</AlertDialogCancel>
                               <AlertDialogAction 
                                 className="bg-red-500 hover:bg-red-600 border-red-500 text-white"
-                                onClick={() => handleCancelListing(
-                                  listing.publicKey,
-                                  listing.tokenMintSource
-                                )}
+                                onClick={() => {
+                                  if (isListingExpired(listing.expiresAt)) {
+                                    handleCloseExpiredListing(
+                                      listing.publicKey,
+                                      listing.maker,
+                                      listing.tokenMintSource
+                                    );
+                                  } else {
+                                    handleCancelListing(
+                                      listing.publicKey,
+                                      listing.tokenMintSource
+                                    );
+                                  }
+                                }}
                               >
-                                {activeTab === 'expired' ? 'Close Listing' : 'Cancel Listing'}
+                                {isListingExpired(listing.expiresAt) ? 'Close Listing' : 'Cancel Listing'}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

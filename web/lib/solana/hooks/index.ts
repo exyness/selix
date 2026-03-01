@@ -5,6 +5,7 @@ export * from './admin/use-admin';
 export * from './listing/use-create-listing';
 export * from './listing/use-execute-swap';
 export * from './listing/use-cancel-listing';
+export * from './listing/use-close-expired-listing';
 export * from './listing/use-fetch-listings';
 export * from './listing/use-fetch-swaps';
 
