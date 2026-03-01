@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -432,18 +433,18 @@ export default function CreateListingPage() {
                             return token ? (
                               <div className="flex items-center gap-2">
                                 {token.image ? (
-                                  <img 
-                                    src={token.image} 
-                                    alt={token.symbol} 
-                                    className="w-5 h-5 rounded-full object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                      if (fallback) fallback.style.display = 'block';
-                                    }}
-                                  />
-                                ) : null}
-                                <Coins className="w-4 h-4" style={{ display: token.image ? 'none' : 'block' }} />
+                                  <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                                    <Image 
+                                      src={token.image} 
+                                      alt={token.symbol} 
+                                      fill
+                                      className="object-cover"
+                                      unoptimized
+                                    />
+                                  </div>
+                                ) : (
+                                  <Coins className="w-4 h-4" />
+                                )}
                                 <span className="text-sm font-mono">{token.symbol}</span>
                               </div>
                             ) : null;
@@ -455,18 +456,18 @@ export default function CreateListingPage() {
                           <SelectItem key={token.mint} value={token.mint}>
                             <div className="flex items-center gap-2">
                               {token.image ? (
-                                <img 
-                                  src={token.image} 
-                                  alt={token.symbol} 
-                                  className="w-4 h-4 rounded-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                    if (fallback) fallback.style.display = 'block';
-                                  }}
-                                />
-                              ) : null}
-                              <Coins className="w-3 h-3" style={{ display: token.image ? 'none' : 'block' }} />
+                                <div className="relative w-4 h-4 rounded-full overflow-hidden">
+                                  <Image 
+                                    src={token.image} 
+                                    alt={token.symbol} 
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              ) : (
+                                <Coins className="w-3 h-3" />
+                              )}
                               <div className="flex flex-col">
                                 <span className="text-xs font-mono font-semibold">{token.symbol}</span>
                                 <span className="text-[10px] text-muted-foreground">{token.name}</span>
@@ -542,18 +543,18 @@ export default function CreateListingPage() {
                             return token ? (
                               <div className="flex items-center gap-2">
                                 {token.image ? (
-                                  <img 
-                                    src={token.image} 
-                                    alt={token.symbol} 
-                                    className="w-5 h-5 rounded-full object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                      if (fallback) fallback.style.display = 'block';
-                                    }}
-                                  />
-                                ) : null}
-                                <Coins className="w-4 h-4" style={{ display: token.image ? 'none' : 'block' }} />
+                                  <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                                    <Image 
+                                      src={token.image} 
+                                      alt={token.symbol} 
+                                      fill
+                                      className="object-cover"
+                                      unoptimized
+                                    />
+                                  </div>
+                                ) : (
+                                  <Coins className="w-4 h-4" />
+                                )}
                                 <span className="text-sm font-mono">{token.symbol}</span>
                               </div>
                             ) : null;
@@ -565,18 +566,18 @@ export default function CreateListingPage() {
                           <SelectItem key={token.mint} value={token.mint}>
                             <div className="flex items-center gap-2">
                               {token.image ? (
-                                <img 
-                                  src={token.image} 
-                                  alt={token.symbol} 
-                                  className="w-4 h-4 rounded-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                    if (fallback) fallback.style.display = 'block';
-                                  }}
-                                />
-                              ) : null}
-                              <Coins className="w-3 h-3" style={{ display: token.image ? 'none' : 'block' }} />
+                                <div className="relative w-4 h-4 rounded-full overflow-hidden">
+                                  <Image 
+                                    src={token.image} 
+                                    alt={token.symbol} 
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              ) : (
+                                <Coins className="w-3 h-3" />
+                              )}
                               <div className="flex flex-col">
                                 <span className="text-xs font-mono font-semibold">{token.symbol}</span>
                                 <span className="text-[10px] text-muted-foreground">{token.name}</span>

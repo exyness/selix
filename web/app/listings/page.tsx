@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { PublicKey } from '@solana/web3.js';
 import { Coins } from 'lucide-react';
 import Navigation from '@/components/layout/navigation';
@@ -19,6 +20,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { useFetchListings, useTokensMetadata } from '@/lib/solana/hooks';
+import type { Listing } from '@/lib/solana/hooks/listing/use-fetch-listings';
 import { toast } from 'sonner';
 
 function formatAddress(address: string) {
@@ -30,7 +32,7 @@ function isListingExpired(expiresAt: bigint): boolean {
   return Number(expiresAt) <= now;
 }
 
-function getListingStatus(listing: any): { label: string; className: string } {
+function getListingStatus(listing: Listing): { label: string; className: string } {
   const isExpired = isListingExpired(listing.expiresAt);
   
   if (isExpired) {
@@ -40,28 +42,28 @@ function getListingStatus(listing: any): { label: string; className: string } {
     };
   }
   
-  if (listing.status.completed !== undefined) {
+  if ('completed' in listing.status) {
     return {
       label: 'Completed',
       className: 'text-blue-500 bg-blue-500/10 border-blue-500/20'
     };
   }
   
-  if (listing.status.cancelled !== undefined) {
+  if ('cancelled' in listing.status) {
     return {
       label: 'Cancelled',
       className: 'text-gray-500 bg-gray-500/10 border-gray-500/20'
     };
   }
   
-  if (listing.status.active !== undefined) {
+  if ('active' in listing.status) {
     return {
       label: 'Active',
       className: 'text-green-500 bg-green-500/10 border-green-500/20'
     };
   }
   
-  if (listing.status.partiallyFilled !== undefined) {
+  if ('partiallyFilled' in listing.status) {
     return {
       label: 'Partial',
       className: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20'
@@ -217,17 +219,17 @@ export default function MarketplacePage() {
     return filtered;
   }, [listings, searchQuery, sourceFilter, destFilter, statusFilter, minAmount, sortMode, tokensMetadata]);
 
-  // Pagination
+  // Pagination - reset to page 1 when filters change
+  const safeCurrentPage = useMemo(() => {
+    const totalPages = Math.ceil(filteredListings.length / itemsPerPage);
+    return currentPage > totalPages ? 1 : currentPage;
+  }, [filteredListings.length, itemsPerPage, currentPage]);
+
   const totalPages = Math.ceil(filteredListings.length / itemsPerPage);
   const paginatedListings = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
     return filteredListings.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredListings, currentPage, itemsPerPage]);
-
-  // Reset to page 1 when filters change
-  useMemo(() => {
-    setCurrentPage(1);
-  }, [searchQuery, sourceFilter, destFilter, statusFilter, minAmount, sortMode]);
+  }, [filteredListings, safeCurrentPage, itemsPerPage]);
 
   return (
     <div className="w-full min-h-screen bg-background text-foreground">
@@ -314,7 +316,11 @@ export default function MarketplacePage() {
                       {uniqueSourceTokens.map(token => (
                         <SelectItem key={token.mint} value={token.mint}>
                           <div className="flex items-center gap-2">
-                            {token.image && <img src={token.image} alt={token.symbol} className="w-4 h-4 rounded-full" />}
+                            {token.image && (
+                              <div className="relative w-4 h-4 rounded-full overflow-hidden">
+                                <Image src={token.image} alt={token.symbol || 'Token'} fill className="object-cover" unoptimized />
+                              </div>
+                            )}
                             <span>{token.symbol || formatAddress(token.mint)}</span>
                           </div>
                         </SelectItem>
@@ -334,7 +340,11 @@ export default function MarketplacePage() {
                       {uniqueDestTokens.map(token => (
                         <SelectItem key={token.mint} value={token.mint}>
                           <div className="flex items-center gap-2">
-                            {token.image && <img src={token.image} alt={token.symbol} className="w-4 h-4 rounded-full" />}
+                            {token.image && (
+                              <div className="relative w-4 h-4 rounded-full overflow-hidden">
+                                <Image src={token.image} alt={token.symbol || 'Token'} fill className="object-cover" unoptimized />
+                              </div>
+                            )}
                             <span>{token.symbol || formatAddress(token.mint)}</span>
                           </div>
                         </SelectItem>
@@ -428,7 +438,9 @@ export default function MarketplacePage() {
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {sourceMetadata?.image ? (
-                                  <img src={sourceMetadata.image} alt={sourceMetadata.symbol} className="w-5 h-5 rounded-full" />
+                                  <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                                    <Image src={sourceMetadata.image} alt={sourceMetadata.symbol || 'Token'} fill className="object-cover" unoptimized />
+                                  </div>
                                 ) : (
                                   <Coins className="w-5 h-5 text-muted-foreground" />
                                 )}
@@ -486,7 +498,9 @@ export default function MarketplacePage() {
                               <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1.5">
                                   {sourceMetadata?.image ? (
-                                    <img src={sourceMetadata.image} alt={sourceMetadata.symbol} className="w-5 h-5 rounded-full" />
+                                    <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                                      <Image src={sourceMetadata.image} alt={sourceMetadata.symbol || 'Token'} fill className="object-cover" unoptimized />
+                                    </div>
                                   ) : (
                                     <Coins className="w-4 h-4 text-muted-foreground" />
                                   )}
@@ -497,7 +511,9 @@ export default function MarketplacePage() {
                                 <span className="text-muted-foreground font-mono text-[10px]">→</span>
                                 <div className="flex items-center gap-1.5">
                                   {destMetadata?.image ? (
-                                    <img src={destMetadata.image} alt={destMetadata.symbol} className="w-5 h-5 rounded-full" />
+                                    <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                                      <Image src={destMetadata.image} alt={destMetadata.symbol || 'Token'} fill className="object-cover" unoptimized />
+                                    </div>
                                   ) : (
                                     <Coins className="w-4 h-4 text-muted-foreground" />
                                   )}

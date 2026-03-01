@@ -13,7 +13,7 @@ export default function DocsPage() {
         {/* Sidebar */}
         <aside className="w-[240px] fixed h-[calc(100vh-160px)] flex flex-col justify-between">
           <div>
-            <div className="text-[10px] font-mono text-[#0CA5B0] tracking-[0.3em] uppercase mb-1">/// Docs</div>
+            <div className="text-[10px] font-mono text-[#0CA5B0] tracking-[0.3em] uppercase mb-1">{"/// Docs"}</div>
             <h2 className="text-xl font-mono font-bold text-white uppercase mb-8">Documentation</h2>
 
             <div className="space-y-8">
@@ -53,7 +53,7 @@ export default function DocsPage() {
         <main className="ml-[280px] max-w-[800px] pb-32">
           {/* Getting Started */}
           <section id="getting-started" className="mb-20 scroll-mt-32">
-            <div className="text-[10px] font-mono text-[#0CA5B0] tracking-[0.3em] uppercase mb-2">/// Getting Started</div>
+            <div className="text-[10px] font-mono text-[#0CA5B0] tracking-[0.3em] uppercase mb-2">{"/// Getting Started"}</div>
             <h1 className="text-4xl font-mono font-bold tracking-tight text-white uppercase mb-6">
               Welcome to Selix Protocol
             </h1>
