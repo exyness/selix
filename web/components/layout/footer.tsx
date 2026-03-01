@@ -77,7 +77,6 @@ export default function Footer() {
             <li><Link href="/admin" className="hover:text-primary transition-colors">Admin</Link></li>
             <li><Link href="/admin/stats" className="hover:text-primary transition-colors">Statistics</Link></li>
             <li><Link href="/admin/whitelist" className="hover:text-primary transition-colors">Whitelist</Link></li>
-            <li><Link href="/test" className="hover:text-primary transition-colors">Component Test</Link></li>
           </ul>
         </div>
       </div>
