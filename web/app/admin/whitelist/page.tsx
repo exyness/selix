@@ -31,7 +31,29 @@ import { useAllWhitelisted, usePlatform, useAdmin, useTokensMetadata } from '@/l
 import { toast } from 'sonner';
 import WalletRequired from '@/components/wallet/wallet-required';
 
-function TokenCard({ token, metadata, isAuthority, adminLoading, onRemove }: any) {
+interface TokenMetadata {
+  mint: string;
+  name?: string;
+  symbol?: string;
+  image?: string;
+  decimals?: number;
+}
+
+interface WhitelistedToken {
+  mint: PublicKey;
+  updatedAt: bigint;
+  metadata?: TokenMetadata;
+}
+
+interface TokenCardProps {
+  token: WhitelistedToken;
+  metadata?: TokenMetadata;
+  isAuthority: boolean;
+  adminLoading: boolean;
+  onRemove: (mint: PublicKey) => Promise<void>;
+}
+
+function TokenCard({ token, metadata, isAuthority, adminLoading, onRemove }: TokenCardProps) {
   
   const mintStr = token.mint.toString();
   const shortMint = `${mintStr.slice(0, 4)}...${mintStr.slice(-4)}`;
@@ -54,9 +76,10 @@ function TokenCard({ token, metadata, isAuthority, adminLoading, onRemove }: any
       <div className="flex items-center gap-5 mb-6">
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {metadata?.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img 
               src={metadata.image} 
-              alt={metadata.symbol} 
+              alt={metadata.symbol || 'Token'} 
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -182,8 +205,10 @@ export default function AdminTokenWhitelistPage() {
   const [newTokenMint, setNewTokenMint] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
 
-  const isAuthority = connected && publicKey && platform && 
-    publicKey.toString() === platform.authority.toString();
+  const isAuthority: boolean = Boolean(
+    connected && publicKey && platform && 
+    publicKey.toString() === platform.authority.toString()
+  );
 
   const handleAddToken = async () => {
     if (!newTokenMint) {
@@ -214,7 +239,7 @@ export default function AdminTokenWhitelistPage() {
   };
 
   // Filter and sort tokens with metadata
-  const tokensWithMetadata = whitelisted.map((token) => {
+  const tokensWithMetadata: WhitelistedToken[] = whitelisted.map((token) => {
     const metadata = tokensMetadata.find(m => m.mint === token.mint.toString());
     return { ...token, metadata };
   });
