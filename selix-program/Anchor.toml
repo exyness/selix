@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-selix = "J444nFUBaia7rWb9VweAwBUq23pqcPeSQvKvKxVbHMD3"
+selix = "78rmRifj2MxADVrsXMotk6CH4toEHqUmu99uctSrPa8H"
 
 [registry]
 url = "https://api.apr.dev"

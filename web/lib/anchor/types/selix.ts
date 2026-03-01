@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/selix.json`.
  */
 export type Selix = {
-  "address": "J444nFUBaia7rWb9VweAwBUq23pqcPeSQvKvKxVbHMD3",
+  "address": "78rmRifj2MxADVrsXMotk6CH4toEHqUmu99uctSrPa8H",
   "metadata": {
     "name": "selix",
     "version": "0.1.0",
