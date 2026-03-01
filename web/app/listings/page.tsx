@@ -81,7 +81,7 @@ export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [destFilter, setDestFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'partial'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'partial' | 'completed'>('all');
   const [minAmount, setMinAmount] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -190,6 +190,8 @@ export default function MarketplacePage() {
         const isExpired = isListingExpired(listing.expiresAt);
         return filled > 0 && listing.amountSourceRemaining > BigInt(0) && !isExpired;
       });
+    } else if (statusFilter === 'completed') {
+      filtered = filtered.filter(listing => 'completed' in listing.status);
     }
     
     // Min amount filter
@@ -240,7 +242,7 @@ export default function MarketplacePage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-4 sm:gap-6">
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <span className="font-mono text-[10px] text-muted-foreground tracking-[0.2em] uppercase">/// Active Listings</span>
+              <span className="font-mono text-[10px] text-muted-foreground tracking-[0.2em] uppercase">{"/// Active Listings"}</span>
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20">
                 <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
                 <span className="text-[9px] font-mono text-primary tracking-wider uppercase">Live</span>
@@ -390,6 +392,17 @@ export default function MarketplacePage() {
                   />
                   <div className="w-3.5 h-3.5 border border-border peer-checked:bg-primary peer-checked:border-primary transition-all" />
                   <span className="text-[11px] font-mono text-muted-foreground group-hover:text-foreground">Partially Filled</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="radio" 
+                    name="status" 
+                    checked={statusFilter === 'completed'} 
+                    onChange={() => setStatusFilter('completed')}
+                    className="hidden peer" 
+                  />
+                  <div className="w-3.5 h-3.5 border border-border peer-checked:bg-primary peer-checked:border-primary transition-all" />
+                  <span className="text-[11px] font-mono text-muted-foreground group-hover:text-foreground">Completed</span>
                 </label>
               </div>
 

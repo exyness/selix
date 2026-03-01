@@ -195,6 +195,7 @@ export default function ListingDetailPage() {
   const status = listing.status;
   const isActive = ('active' in status) || ('partiallyFilled' in status);
   const isExpired = isListingExpired(listing.expiresAt);
+  const isCompleted = 'completed' in status;
 
   // Format amounts with decimals
   const formatTokenAmount = (amount: BN, decimals: number = 9) => {
@@ -440,6 +441,28 @@ export default function ListingDetailPage() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                </div>
+              </div>
+            )}
+
+            {/* Completed Listing Message */}
+            {isCompleted && (
+              <div className="sticky top-24 bg-card border border-green-500/20 p-6">
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-mono font-medium mb-2">Listing Completed</h3>
+                  <p className="text-xs font-mono text-muted-foreground mb-4">
+                    This listing has been fully filled and is no longer available for swapping.
+                  </p>
+                  <Link href="/listings">
+                    <Button variant="outline" className="w-full font-mono text-[11px] uppercase tracking-wider">
+                      Browse More Listings
+                    </Button>
+                  </Link>
                 </div>
               </div>
             )}

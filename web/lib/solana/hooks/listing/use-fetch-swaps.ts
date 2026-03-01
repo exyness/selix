@@ -50,8 +50,6 @@ export function useFetchSwaps(userPublicKey?: PublicKey | null) {
         );
         
         // Filter listings where user is either maker or taker
-        // For taker: check if listing has fills and user has transactions
-        // For maker: check if user created the listing and it has fills
         for (const listing of listings) {
           if (listing.fillCount === 0) continue;
           
@@ -61,16 +59,19 @@ export function useFetchSwaps(userPublicKey?: PublicKey | null) {
           // Check if user is the maker
           const isMaker = listing.maker.equals(userPublicKey);
           
-          // For takers, we need to check if they have transactions related to this listing
-          // This is approximate - we're checking if user has transactions in the timeframe
-          const hasPotentialTakerTx = signatures.some(sig => 
-            sig.blockTime && 
-            sig.blockTime >= listing.createdAt.toNumber() &&
-            sig.blockTime <= listing.updatedAt.toNumber()
-          );
-          
-          // Only include if user is maker OR potentially a taker
-          if (!isMaker && !hasPotentialTakerTx) continue;
+          // For now, include all filled listings where user is maker
+          // For takers, we'll need to check transaction history more thoroughly
+          // This is a simplified version - ideally we'd parse transaction logs
+          if (!isMaker) {
+            // Check if user has any transactions in the relevant timeframe
+            const hasPotentialTakerTx = signatures.some(sig => 
+              sig.blockTime && 
+              sig.blockTime >= listing.createdAt.toNumber() &&
+              sig.blockTime <= (listing.updatedAt.toNumber() + 3600) // Add 1 hour buffer
+            );
+            
+            if (!hasPotentialTakerTx) continue;
+          }
           
           // Calculate approximate amounts per fill
           const avgAmountPerFill = amountFilled.div(new BN(listing.fillCount));

@@ -39,12 +39,8 @@ export function useFetchListings() {
         ...account.account,
       })) as Listing[];
       
-      // Show active and partially filled listings
-      const activeListings = listingsData.filter(
-        (listing) => 'active' in listing.status || 'partiallyFilled' in listing.status
-      );
-      
-      return activeListings;
+      // Return all listings (active, partially filled, and completed)
+      return listingsData;
     },
     enabled: !!program,
     staleTime: 30000,
