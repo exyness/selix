@@ -18,8 +18,7 @@ A decentralized token swap platform built on Solana using the Anchor framework. 
 ```
 selix/
 ├── selix-program/     # Solana program (Rust/Anchor)
-├── web/               # Next.js frontend application
-└── guide/             # Design specifications and documentation
+└── web/               # Next.js frontend application
 ```
 
 ## Quick Start
