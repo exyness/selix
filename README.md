@@ -1,5 +1,7 @@
 # Selix Protocol
 
+![Selix Cover](./web/public/selix-cover.png)
+
 A decentralized token swap platform built on Solana using the Anchor framework. Selix enables peer-to-peer token exchanges with configurable parameters and platform-level controls.
 
 ## Features
