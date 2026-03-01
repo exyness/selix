@@ -261,7 +261,7 @@ export default function ListingDetailPage() {
       const result = await cancelListing(listing.publicKey, listing.tokenMintSource);
       if (result) {
         toast.success('Listing cancelled successfully!');
-        router.push('/user/listings');
+        router.push('/listings');
       }
     } catch (error) {
       console.error('Error cancelling listing:', error);
@@ -597,7 +597,7 @@ export default function ListingDetailPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancel Listing?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will return your deposited tokens minus network fees. The remaining {listing.amountSourceRemaining.toNumber().toLocaleString()} tokens will be refunded.
+                        This will return your deposited tokens minus network fees. The remaining {formatTokenAmount(listing.amountSourceRemaining, sourceDecimals)} tokens will be refunded.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
